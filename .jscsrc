@@ -1,0 +1,10 @@
+{
+	"preset": "crockford",
+	"requireCurlyBraces": [
+        "for",
+        "while",
+        "do",
+        "try",
+        "catch"
+    ]
+}
