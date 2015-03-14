@@ -27,18 +27,14 @@ app.use(express.cookieParser());
 var MongoStore = require('connect-mongo')(express);
 
 app.use(express.session({
-  secret: config.get('session:secret'), // ABCDE242342342314123421.SHA256
+  secret: config.get('session:secret'),
   key: config.get('session:key'),
   cookie: config.get('session:cookie'),
   store: new MongoStore({mongoose_connection: mongoose.connection})
 }));
 
-app.use(function(req, res, next) {
-  req.session.numberOfVisits = req.session.numberOfVisits + 1 || 1;
-  res.send("Visits: " + req.session.numberOfVisits);
-});
-
 app.use(require('./middleware/sendHttpError'));
+app.use(require('./middleware/loadUser'));
 
 app.use(app.router);
 

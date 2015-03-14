@@ -1,34 +1,14 @@
-var User = require('../models/user').User;
-var HttpError = require('../error').HttpError;
-var ObjactID = require('mongodb').ObjectID;
+var checkAuth = require('../middleware/checkAuth');
 
 module.exports = function(app) {
 
-    app.get('/', function (req, res, next) {
-        res.render("index");
-    });
+  app.get('/', require('./frontpage').get);
 
-    app.get('/users', function (req, res, next) {
-        User.find({}, function (err, users) {
-            if (err) return next(err);
-            res.json(users);
-        })
-    });
+  app.get('/login', require('./login').get);
+  app.post('/login', require('./login').post);
 
-    app.get('/user/:id', function (req, res, next) {
+  app.post('/logout', require('./logout').post);
 
-        try {
-            var id = new ObjactID(req.params.id);
-        } catch (e) {
-            return next(404);
-        }
+  app.get('/chat', checkAuth, require('./chat').get);
 
-        User.findById(id, function (err, user) {
-            if (err) return next(err);
-            if (!user) {
-                next(new HttpError(404, "User not found"));
-            }
-            res.json(user);
-        });
-    });
 };
