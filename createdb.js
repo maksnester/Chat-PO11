@@ -1,7 +1,7 @@
 //mongod --dbpath C:/db
 //mongo chat
 
-var mongoose = require('libs/mongoose');
+var mongoose = require('./libs/mongoose');
 var async = require('async');
 
 async.series([
@@ -25,7 +25,7 @@ function dropDatabase(callback) {
 }
 
 function requireModels(callback) {
-    require('models/user');
+    require('./models/user');
 
     async.each(Object.keys(mongoose.models), function (modelName, callback) {
         mongoose.models[modelName].ensureIndexes(callback);
