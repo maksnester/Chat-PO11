@@ -1,5 +1,5 @@
-var User = require('models/user').User;
-var HttpError = require('error').HttpError;
+var User = require('../models/user').User;
+var HttpError = require('../error').HttpError;
 var ObjactID = require('mongodb').ObjectID;
 
 module.exports = function(app) {
