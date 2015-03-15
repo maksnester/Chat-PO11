@@ -1,5 +1,13 @@
 {
+  "name": "application-name",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+      "start": "node app.js"
+  },
   "dependencies": {
-    "bootstrap": "~3.0.0"
+    "jquery": "~2.0.3",
+    "bootstrap": "~3.0.0",
+    "socket.io-client": "~0.9.16"
   }
 }

@@ -1,10 +1,10 @@
 var express = require('express');
 var http = require('http');
 var path = require('path');
-var config = require('./config');
-var log = require('./lib/log')(module);
-var mongoose = require('./lib/mongoose');
-var HttpError = require('./error').HttpError;
+var config = require('config');
+var log = require('lib/log')(module);
+var mongoose = require('lib/mongoose');
+var HttpError = require('error').HttpError;
 
 var app = express();
 
@@ -24,27 +24,27 @@ app.use(express.bodyParser());
 
 app.use(express.cookieParser());
 
-var MongoStore = require('connect-mongo')(express);
+var sessionStore = require('lib/sessionStore');
 
 app.use(express.session({
   secret: config.get('session:secret'),
   key: config.get('session:key'),
   cookie: config.get('session:cookie'),
-  store: new MongoStore({mongoose_connection: mongoose.connection})
+  store: sessionStore
 }));
 
-app.use(require('./middleware/sendHttpError'));
-app.use(require('./middleware/loadUser'));
+app.use(require('middleware/sendHttpError'));
+app.use(require('middleware/loadUser'));
 
 app.use(app.router);
 
-require('./routes')(app);
+require('routes')(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use(function(err, req, res, next) {
-  if (typeof err == 'number') { // next(404);
+  if (typeof err == 'number') {
     err = new HttpError(err);
   }
 
@@ -62,7 +62,10 @@ app.use(function(err, req, res, next) {
 });
 
 
-http.createServer(app).listen(config.get('port'), function(){
+var server = http.createServer(app);
+server.listen(config.get('port'), function(){
   log.info('Express server listening on port ' + config.get('port'));
 });
 
+var io = require('./socket')(server);
+app.set('io', io);
