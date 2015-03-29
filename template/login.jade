@@ -1,0 +1,18 @@
+-var pageTitle="Регистрация и вход"
+extends layout/page.jade
+block append scripts
+   script(src="/js/login.js")
+block content
+   form.form-horizontal.login-form.col-xs-12.col-sm-offset-3.col-sm-6.col-lg-4.col-lg-offset-4(name="login-form")
+      h4.form-group Введите имя пользователя и пароль. Если такого пользователя нет - он будет создан.
+      .form-group
+         label.control-label(for="input-username") Имя
+         input.form-control#input-username(name="username" value="name" type="text" placeholder="Имя")
+
+      .form-group
+         label.control-label(for="input-password") Пароль
+         input.form-control#input-password(name="password" type="password" placeholder="Пароль")
+
+      .form-group
+         button.btn.btn-primary(type="submit" data-loading-text="Отправляю...") Войти
+         span.help-block.error

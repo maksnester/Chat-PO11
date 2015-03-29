@@ -1,0 +1,84 @@
+extends layout/page.jade
+block title
+    title Настройки
+block append stylesheets
+    link(rel="stylesheet" href="/css/account.css")
+block append scripts
+    script(src="/js/account.js")
+block header
+    block header
+        header
+            h1 Настройки
+block content
+    .col-xs-12
+        .tab-container(role="tabpanel")
+            ul#myTab.nav.nav-tabs(role="tablist")
+                li.active(role="presentation")
+                    a#settings-tab(href="#settings" role="tab" data-toggle="tab" aria-controls="home" aria-expanded="false")
+                        span.glyphicon.glyphicon-cog(style="top: 2px")
+                        | &nbsp;Настройки
+                li(role="presentation")
+                    a#profile-tab(href="#profile" role="tab" data-toggle="tab" aria-controls="profile" aria-expanded="true")
+                        span.glyphicon.glyphicon-user
+                        | &nbsp;Профиль
+                li(role="presentation")
+                    a#storage-tab(href="#storage" role="tab" data-toggle="tab" aria-controls="profile" aria-expanded="true")
+                        span.glyphicon.glyphicon-cloud(style="top: 3px")
+                        | &nbsp;Информация о хранилище файлов
+
+            #myTabContent.tab-content
+
+                #settings.tab-pane.fade.active.in(role="tabpanel" aria-labelledby="settings-tab")
+                    form.basic-form
+                        input#login.form-control(name="login" type="text" placeholder="Логин в чате" required)
+                        input#password.form-control(name="password" type="password" placeholder="Новый пароль")
+                        input#password-confirm.form-control(name="password-confirm" type="password" placeholder="Подтверждение пароля")
+                        button.btn.btn-sm.btn-primary.btn-save(type="submit") Сохранить
+
+                #profile.tab-pane.fade(role="tabpanel" aria-labelledby="profile-tab")
+                    form.basic-form
+                        .form-group
+                            #avatar-preview
+                            label.control-label(for="#avatar") Аватар
+                            input#avatar(name="avatar" type="file")
+
+                        .form-group
+                            label.control-label(for="#name") Имя
+                            input#name.form-control(name="name" type="text" placeholder="Введите ваше обычное имя")
+
+                        .form-group
+                            label.control-label(for="#age") Возраст
+                            input#age.form-control(name="age" type="text" placeholder="Только цифры от 5 до 120")
+
+                        .form-group
+                            label.control-label(for="#about") Обо мне
+                            textarea#about.form-control(name="about" placeholder="Расскажите что-нибудь о себе...")
+                        button.btn.btn-sm.btn-primary.btn-save(type="submit") Сохранить
+                #storage.tab-pane.fade(role="tabpanel" aria-labelledby="storage-tab")
+                    .progress
+                        .progress-bar(role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;")
+                            |60%
+                    #storageSize Занято 6Мб из 10Мб
+
+                    #storageList
+                        form.basic-form
+                            .form-group
+                                input#file(name="file" type="file")
+                                button.btn.btn-sm.btn-primary.btn-save(type="submit") Сохранить файл
+                        |Файлы:
+                        //по клику давать ссылку на файл
+                        ul
+                            li File1.txt
+                                button.close(type="button")
+                                    span(aria-hidden="true") ×
+                            li Котятки5.jpg
+                                button.close(type="button")
+                                    span(aria-hidden="true") ×
+                            li Список способов сделать это.doc
+                                button.close(type="button")
+                                    span(aria-hidden="true") ×
+                            li 514124123123.png
+                                button.close(type="button")
+                                    span(aria-hidden="true") ×
+
+

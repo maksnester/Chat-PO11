@@ -1,0 +1,100 @@
+#main-container {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+#left {
+    display: inline-block;
+    float: left;
+    width: 220px;
+    height: 100%;
+    background-color: rgb(77, 57, 75);
+    color: rgb(171, 155, 169);
+}
+
+#logo {
+    height: 10%;
+    background: url("/img/logo.jpg");
+    background-size: cover;
+    background-position-y: -30px;
+    cursor: pointer;
+}
+
+#chats {
+    height: 75%;
+    border-bottom: 3px solid black;
+}
+
+#center {
+    display:block;
+    width: auto;
+    height: 100%;
+    background-color: #FFFFFF;
+    color: #212121;
+    overflow-y: auto;
+}
+
+#center > .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#top {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#messages {
+    overflow-y: auto;
+    height: 85%;
+}
+
+.msg {
+    width: 100%;
+}
+
+#message-input {
+    height: 15%;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#input {
+    resize: none;
+    height: 100%;
+    margin-left: 10px;
+}
+
+#right {
+    display: inline-block;
+    float: right;
+    width: 300px;
+    height: 100%;
+    background-color: #f8f8ff;
+    padding-left: 15px;
+}
+
+#right-header {
+    height: 30px;
+    border-bottom: 1px solid black;
+    margin-right: 10px;
+}
+
+.smile-icon {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    background: url('/img/im_smile_cross.png') 0 -24px no-repeat;
+}
+
+.hoverable:hover {
+    color: #FFF;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.myMsg {
+    font-weight: bold;
+}

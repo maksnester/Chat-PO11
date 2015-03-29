@@ -1,0 +1,26 @@
+.navbar.navbar-default(role='navigation')
+   .container
+      .navbar-header
+         button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+         span.navbar-brand Chat-PO11
+      .navbar-collapse.collapse
+         ul.nav.navbar-nav
+            li
+               a(href='/') Главная
+            if user
+               li
+                  a(href='/chat') Чат
+               li
+                  a(href='/account') Аккаунт
+               li
+                  a(href='/feedback') Обратная связь
+         ul.nav.navbar-nav.navbar-right
+            li
+               if user
+                  a(href="" onclick="$('<form method=POST action=/logout>').appendTo('body').submit();return false") Выход
+               else
+                  a(href="/login") Войти
+

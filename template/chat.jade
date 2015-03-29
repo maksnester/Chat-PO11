@@ -1,0 +1,36 @@
+-var pageTitle="Чат"
+extends layout/page.jade
+block append scripts
+   script(src="/vendor/bower_components/socket.io-client/dist/socket.io.js")
+   script(src="/js/chat.js")
+block append stylesheets
+   link(rel="stylesheet" href="/css/chat.css")
+
+block body
+   #main-container
+      #left
+         #logo(onclick="window.location.href = '/';")
+         #chats
+            h4 CHATS
+            ul
+               li.hoverable All
+               li.hoverable my-group
+               li.hoverable Пацаны
+         #me
+            |Здесь должны появится:
+            |Аватар
+            |Логин
+            |(Статус)
+
+      #right
+         #right-header
+            h2 Info
+         | Here will be some buttons and contact info
+
+
+      #center.container-fluid
+         #messages.row
+         #message-input.row
+            textarea#input.col-xs-10(maxlength="4000" disabled)
+            .col-xs-1
+               .smile-icon
