@@ -2,8 +2,8 @@ var crypto = require('crypto');
 var async = require('async');
 var util = require('util');
 
-var mongoose = require('lib/mongoose'),
-  Schema = mongoose.Schema;
+var mongoose = require('lib/mongoose');
+var Schema = mongoose.Schema;
 
 var schema = new Schema({
   username: {
@@ -22,7 +22,19 @@ var schema = new Schema({
   created: {
     type: Date,
     default: Date.now
-  }
+  },
+  rooms: [
+    {
+      _id: {
+        type: Schema.Types.ObjectId,
+        ref: 'Group'
+      },
+      roomName: {
+        type: String,
+        unique: true
+      }
+    }
+  ]
 });
 
 schema.methods.encryptPassword = function(password) {
