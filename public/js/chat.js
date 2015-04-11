@@ -35,13 +35,20 @@ var socket = io.connect('', {
 
 socket
     .on('message', function (username, message) {
+        //TODO разная логика для новых сообщений из ативной и неактивных комнат
+        //если комната неактивна и из неё пришло новое сообщение, сохраняем его в отложенные сообщения
+        //показываем, что пришло сообщение
+        //при переключении комнаты:
+        // * очистить счетчик новых сообщений
+        // * показать отложенные сообщения
         printMessage("<b>" + username + "</b>: " + message);
     })
+//TODO если пользователь есть в текущей комнате, то надо обновить его статус в списке справа
     .on('leave', function (username) {
-        printStatus(username + " вышел из чата");
+        setUserStatusOnline(username, false);
     })
     .on('join', function (username) {
-        printStatus(username + " вошёл в чат");
+        setUserStatusOnline(username, false);
     })
     .on('connect', function () {
         printStatus("соединение установлено");
@@ -94,6 +101,13 @@ function printMessage(text) {
     }
 }
 
+function setUserStatusOnline(username, isOnline) {
+    //TODO обновить статус пользователя в правом блоке чата
+    console.log("User %o - online: %o.", username, isOnline);
+
+    var msg = isOnline ? " вошёл в чат." : " вышел из чата.";
+    printStatus(username + msg);
+}
 
 //Код, чтобы посылать сообщения автоматически
 //Кодгда нужно остановить - в консоли пишем: clearInterval(autoMsg);

@@ -48,6 +48,8 @@
 #messages {
     overflow-y: auto;
     height: 85%;
+    padding-left: 10px;
+    padding-top: 6px;
 }
 
 .msg {

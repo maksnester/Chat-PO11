@@ -119,20 +119,43 @@ module.exports = function(server) {
 
         client.handshake.session = session;
       });
-        
     });
-
   });
+
+  var users = {};
 
   io.sockets.on('connection', function(socket) {
 
+    /**
+     * Что такое группа? Группа - это просто название комнаты. Вернее, ID комнаты.
+     *
+     * Как добавить пользователя в группу? Послать запрос, содержащий имя добавляемого пользователя.
+     * Сервер обработает запрос: найдет пользователя, возьмёт его сокет, укажет сокету пользователя, что он
+     * теперь добавлен в группу и будет получать от неё сообщения: socket.join('roomId');
+     *
+     * Если пользователь вышел - ничего никуда не посылаем. Но ведётся история сообщений для каждой группы.
+     * Все сообщения для всех комнат сохраняются в БД. Формат такой:
+     *                                          {room: ObjectId, messages: [{user: String, message: String}]}
+     *
+     * Пользователь получает сообщения со всех комнат, но как их просматривать - решается на клиенте.
+     *
+     * Для индикации текущей комнаты используется socket.room = 'roomId'
+     *
+     * Комната имеет идентификатор. Привязка к комнате особого имени хринтся у пользователя (БД).
+     */
+
     var username = socket.handshake.user.get('username');
+    users[username] = {socket: socket}; // сохраняем сокет пользователя для дальнейших обращений
 
-    socket.broadcast.emit('join', username);
+    socket.room = 'all';
+    socket.join('all');
+    socket.broadcast.to('all').emit('join', username);
 
-    socket.on('message', function(text, cb) {
-      socket.broadcast.emit('message', username, text);
-      cb && cb();
+    socket.on('message', function(text, callback) {
+      //сообщение идёт только в текущую комнату
+      socket.broadcast.to(socket.room).emit('message', username, text);
+
+      callback && callback(); // если передан callback, то он вызывается на клиенте
     });
 
     socket.on('disconnect', function() {

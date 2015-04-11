@@ -24,13 +24,20 @@ block body
 
       #right
          #right-header
-            h2 Info
-         | Here will be some buttons and contact info
+            h2 Chanel Info
+         #right-content
+            br
+            p
+               span.glyphicon.glyphicon-user
+               |&nbsp;Members:
+            #members-list
+               ul#online-users
+               ul#offline-users
 
 
       #center.container-fluid
          #messages.row
          #message-input.row
-            textarea#input.col-xs-10(maxlength="4000" disabled)
+            textarea#input.col-xs-10(maxlength="4000" disabled tabindex="1")
             .col-xs-1
                .smile-icon
