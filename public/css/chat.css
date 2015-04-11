@@ -18,7 +18,11 @@
     background: url("/img/logo.jpg");
     background-size: cover;
     background-position-y: -30px;
-    cursor: pointer;
+}
+
+#logo > a {
+    display: block;
+    height: 100%;
 }
 
 #chats {
