@@ -2,7 +2,9 @@
 extends layout/page.jade
 block append scripts
    script(src="/vendor/bower_components/socket.io-client/dist/socket.io.js")
-   script(src="/js/chat.js")
+   script(src="/js/chat/rooms.js")
+   script(src="/js/chat/membersList.js")
+   script(src="/js/chat/chat.js")
 block append stylesheets
    link(rel="stylesheet" href="/css/chat.css")
 
@@ -25,14 +27,12 @@ block body
 
       #right
          #right-header
-            h2 Chanel Info
+            h3 Список пользователей
          #right-content
-            br
-            p
-               span.glyphicon.glyphicon-user
-               |&nbsp;Members:
             #members-list
+               span online:
                ul#online-users
+               span offline:
                ul#offline-users
 
 

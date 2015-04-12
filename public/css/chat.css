@@ -88,6 +88,11 @@
     margin-right: 10px;
 }
 
+#right-content {
+    height: 100%;
+    overflow: auto;
+}
+
 .smile-icon {
     cursor: pointer;
     width: 24px;
@@ -99,6 +104,19 @@
     color: #FFF;
     cursor: pointer;
     text-decoration: underline;
+}
+
+#members-list {
+    padding-top: 10px;
+}
+
+#members-list > span {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+#members-list .hoverable:hover {
+    color: #716d6d;
 }
 
 .myMsg {

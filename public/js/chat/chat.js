@@ -3,13 +3,13 @@
 var input;
 var messageContainer;
 var form;
+var onlineUsers;
+var offlineUsers;
 var autoscroll = true;
 
 $(document).ready(function() {
-    messageContainer = $('#messages');
-
+    // поле ввода сообщений
     input = $('#input');
-
     input[0].onkeydown = function(event) {
         if (event.keyCode === 13) {
             if (event.ctrlKey) {
@@ -22,6 +22,8 @@ $(document).ready(function() {
         }
     };
 
+    // при наведении указателя мыши, перестаём автоматически скроллить сообщения
+    messageContainer = $('#messages');
     messageContainer.mouseenter(function() {
         autoscroll = false;
     }).mouseleave(function() {
@@ -35,7 +37,7 @@ var socket = io.connect('', {
 
 socket
     .on('message', function (username, message) {
-        //TODO разная логика для новых сообщений из ативной и неактивных комнат
+        //TODO разная логика для новых сообщений из активной и неактивных комнат
         //если комната неактивна и из неё пришло новое сообщение, сохраняем его в отложенные сообщения
         //показываем, что пришло сообщение
         //при переключении комнаты:
@@ -43,20 +45,31 @@ socket
         // * показать отложенные сообщения
         printMessage("<b>" + username + "</b>: " + message);
     })
-//TODO если пользователь есть в текущей комнате, то надо обновить его статус в списке справа
-    .on('leave', function (username) {
-        setUserStatusOnline(username, false);
+    .on('leave', function (username, roomList) {
+        // событие надо обрабатывать только тогда, когда текущая комната среди тех, в которых есть этот пользователь
+        if (isCurrentRoomInList(roomList)) {
+            setUserStatusOnline(username, false);
+        }
     })
-    .on('join', function (username) {
-        setUserStatusOnline(username, false);
+    .on('join', function (username, roomList) {
+        if (isCurrentRoomInList(roomList)) {
+            setUserStatusOnline(username, true);
+        }
     })
     .on('connect', function () {
         printStatus("соединение установлено");
-        input.prop('disabled', false);
+        socket.emit("switchRoom", "all", function(roomId) {
+            input.prop('disabled', false);
+            currentRoom = {_id: roomId, roomName: "all"};
+        });
+    })
+    .on('updateMembersList', function(usersInRoom) {
+        membersList.update(usersInRoom);
     })
     .on('disconnect', function () {
         printStatus("соединение потеряно");
         input.prop('disabled', true);
+        membersList.clear();
         this.$emit('error');
     })
     .on('logout', function () {
@@ -74,6 +87,7 @@ socket
 
 function sendMessage() {
     var text = input.val();
+    if (!text || !text.trim()) return;
     socket.emit('message', text, function () {
         printMessage(wrapWithClass('<b>Я: </b> ' + text, "mymsg"));
     });
@@ -82,8 +96,14 @@ function sendMessage() {
     return false;
 }
 
-function wrapWithClass(text, classname) {
-    return '<span class="' + classname + '">' + text + '</span>'
+function printMessage(text) {
+    // регулярка убирает переносы строк (если их больше 2х подряд, заменяются на 2 переноса)
+    // и так как переносы строк приходят в формате "\n", то они меняются на тег "br"
+    text = '<p>' + text.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>').trim() + '</p>';
+    $(messageContainer).append(text);
+    if (autoscroll) {
+        messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
+    }
 }
 
 function printStatus(status) {
@@ -93,20 +113,29 @@ function printStatus(status) {
     }
 }
 
-function printMessage(text) {
-    text = '<p>' + text.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>').trim() + '</p>';
-    $(messageContainer).append(text);
-    if (autoscroll) {
-        messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
-    }
-}
-
-function setUserStatusOnline(username, isOnline) {
+/**
+ * Добавляет сообщение, что пользователь вошёл или вышел.
+ * Меняет отображаемое состояние пользователя в списке пользователей.
+ * @param username
+ * @param isOnline
+ */
+function setUserStatusOnline (username, isOnline) {
     //TODO обновить статус пользователя в правом блоке чата
+    membersList.setUserStatusOnline(username, isOnline);
     console.log("User %o - online: %o.", username, isOnline);
 
     var msg = isOnline ? " вошёл в чат." : " вышел из чата.";
     printStatus(username + msg);
+}
+
+/**
+ * Оборачивает сообщение в тег span с указанным классом
+ * @param text
+ * @param classname - класс, либо список классов вида "класс1[ класс2][...]"
+ * @returns {string}
+ */
+function wrapWithClass(text, classname) {
+    return '<span class="' + classname + '">' + text + '</span>'
 }
 
 //Код, чтобы посылать сообщения автоматически

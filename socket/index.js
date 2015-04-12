@@ -1,11 +1,13 @@
+'use strict';
 var log = require('lib/log')(module);
 var config = require('config');
 var connect = require('connect'); // npm i connect
 var async = require('async');
-var cookie = require('cookie');   // npm i cookie
 var sessionStore = require('lib/sessionStore');
+var utils = require('lib/utils');
 var HttpError = require('error').HttpError;
 var User = require('models/user').User;
+var Room = require('models/room').Room;
 var express = require('express');
 
 function loadSession(sid, callback) {
@@ -29,18 +31,179 @@ function loadUser(session, callback) {
     return callback(null, null);
   }
 
-  log.debug("retrieving user ", session.user);
-
   User.findById(session.user, function(err, user) {
     if (err) return callback(err);
 
     if (!user) {
       return callback(null, null);
     }
-    log.debug("user findbyId result: " + user);
     callback(null, user);
   });
 
+}
+
+/**
+ * Возвращает через callback список пользователей в комнате.
+ * У пользователя комнаты могут быть названы по-своему.
+ *
+ * @param username
+ * @param roomName - наименование комнаты у пользователя.
+ * @param callback - используется для передачи списка пользователей
+ */
+function getUsersInRoom(username, roomName, callback) {
+  User.findOne({"username": username}, function (err, user) {
+    if (err) {
+      return callback(err);
+    }
+    if (!user) {
+      log.error("User %s not found.", username);
+      return callback(new Error("User " + username + " not found."));
+    }
+
+    var room = user.rooms.filter(function (room) {
+      return room.roomName === roomName;
+    }).pop();
+
+    if (!room) {
+      log.error("Room %s not found in user %s", roomName, username);
+      return callback(new Error("Room " + roomName + " not found in user " + username));
+    }
+
+    var roomId = room._id;
+    Room.findById(roomId, 'users', function (err, result) {
+      if (err) {
+        log.error("Error while retrieving room %s from Rooms collection. Error: %s", roomName, err);
+        return callback(err);
+      }
+      if (!result) {
+        log.error("Room %s not found in Rooms collection", roomName);
+        return callback(null, null);
+      }
+
+      callback(null, result.users);
+    });
+  });
+}
+
+/**
+ * Получить по пользовательскому названию комнаты её id.
+ * @param roomName пользовательское название комнаты
+ * @param username
+ * @param callback (ошибка, id комнаты)
+ */
+function getRoomByNameInUser(roomName, username, callback) {
+  User.findOne({username: username}, 'rooms', function (err, user) {
+    if (err) return callback(err);
+    if (!user) return callback(new Error("User " + username + " not found."));
+    
+    var index = utils.indexOfObjByAttr(user.rooms, "roomName", roomName);
+    if (index < 0) return callback(new Error("getRoomByNameInUser: Room " + roomName + " not found in user " + username));
+    
+    callback(null, user.rooms[index]._id);
+  });
+}
+
+var DEFAULT_ROOM_ID;
+getDefaultRoomId(function(id) {DEFAULT_ROOM_ID = id;});
+
+/**
+ * Устанавливает связи между пользователем и комнатой, добавляя имя пользователя в список комнаты,
+ * а _id комнаты, в список комнат у пользователя.
+ *
+ * @param username
+ * @param callback
+ */
+function checkUserDefaultRoom(username, callback) {
+  console.log("Start checking user default room");
+  User.findOne({username: username}, function (err, user) {
+    if (err) callback(err);
+    if (!user) callback("User " + username + " not found.");
+
+    var room = user.rooms.id(DEFAULT_ROOM_ID);
+
+    if (!room) {
+      user.rooms.push({_id: DEFAULT_ROOM_ID, roomName: 'all'});
+      user.save(function (err, user) {
+        if (err) return callback(err);
+
+        addUserToRoom(username, DEFAULT_ROOM_ID, function(err) {
+          if (err) return callback(err);
+          callback(null);
+        });
+
+      });
+    } else callback();
+  });
+}
+
+/**
+ * В коллекции Rooms добавляет логин пользователя в список
+ * @param username
+ * @param {ObjectId} roomId
+ * @param callback
+ */
+function addUserToRoom(username, roomId, callback) {
+  Room.findById(roomId, function (err, room) {
+    if (err) return callback(err);
+    if (!room) return callback(new Error("WARNING! Room not found!"));
+
+    var foundUser = room.users.filter(function(user) {
+      return user === username;
+    }).pop();
+
+    if (!foundUser) {
+      room.users.push(username);
+      room.save(function(err, room) {
+        if (err) log.error(err);
+        callback(null);
+      });
+    } else callback(null);
+  });
+}
+
+/**
+ * В коллекции Users добавляет пользователю комнату в список с указанным именем
+ * @param room
+ * @param username
+ * @param roomName
+ * @param callback
+ */
+function addRoomToUser(room, username, roomName, callback) {
+
+}
+
+/**
+ * Ищет комнату, у которой поле special = 'default room'.
+ * Если такой комнаты нет, то создаёт её.
+ * @param callback - через колбэк возвращаем id комнаты
+ */
+function getDefaultRoomId(callback) {
+  Room.findOne({special: 'default room'}, '_id', function(err, room) {
+    if (err) return log.error(err);
+    if (!room) {
+      //создаём
+      var defaultRoom = new Room({special: 'default room'});
+      defaultRoom.save(function(err, room) {
+        if (err || !room) return log.error("Error creating default room: %s.", err);
+        callback(room._id);
+      });
+    } else {
+      callback(room._id);
+    }
+  });
+}
+
+/**
+ * Получить список комнат для пользователя и передать их через callback.
+ * @param username
+ * @param callback (ошибка, комнаты)
+ */
+function getUserRooms(username, callback) {
+  User.findOne({username: username}, function (err, user) {
+    if (err) return callback(err);
+    if (!user) return callback(new Error("User " + username + " not found."));
+    callback(null, user.rooms);
+  });
 }
 
 module.exports = function(server) {
@@ -122,7 +285,7 @@ module.exports = function(server) {
     });
   });
 
-  var users = {};
+  var __users = {};
 
   io.sockets.on('connection', function(socket) {
 
@@ -145,23 +308,76 @@ module.exports = function(server) {
      */
 
     var username = socket.handshake.user.get('username');
-    users[username] = {socket: socket}; // сохраняем сокет пользователя для дальнейших обращений
+    __users[username] = {socket: socket}; // сохраняем сокет пользователя для дальнейших обращений
 
-    socket.room = 'all';
-    socket.join('all');
-    socket.broadcast.to('all').emit('join', username);
+    //проверяем сперва, есть ли у пользователя комната по-умолчанию, если нет - добавить ему её и его в неё
+    checkUserDefaultRoom(username, function(err) {
+      if (err) {
+        log.error("Ошибка при проверке у пользователя комнаты по-умолчанию: " + err);
+        socket.emit("error");
+        return;
+      }
 
-    socket.on('message', function(text, callback) {
-      //сообщение идёт только в текущую комнату
-      socket.broadcast.to(socket.room).emit('message', username, text);
+      //TODO понадобится join во все комнаты, что есть у пользователя в списке
 
-      callback && callback(); // если передан callback, то он вызывается на клиенте
+      socket.on('switchRoom', function (roomName, clientCb) {
+        var _roomId;
+        async.waterfall([
+          function (callback) {
+            //roomName - это пользовательское название комнаты. Получим из него _id комнаты
+            getRoomByNameInUser(roomName, username, callback);
+          },
+          function(roomId, callback) {
+            _roomId = roomId;
+            socket.room = roomId;
+            socket.join(roomId);
+            getUsersInRoom(username, roomName, callback);
+          },
+          function(usersInRoom, callback) {
+            //посылаем пользователю список людей в комнате, в которую он входит
+            //разделяем список на online и offline пользователей
+            var membersList = {onlineUsers: [], offlineUsers: []};
+            usersInRoom.forEach(function(elem) {
+              if (__users[elem]) {
+                membersList.onlineUsers.push(elem);
+              } else {
+                membersList.offlineUsers.push(elem);
+              }
+            });
+            socket.emit('updateMembersList', membersList);
+            getUserRooms(username, callback);
+          },
+          function (roomList, callback) {
+            socket.broadcast.emit('join', username, roomList);
+            callback(null);
+          }
+        ], function(err) {
+          if (err) {
+            log.error("При переходе в другую комнату возникли ошибки: ", err);
+          }
+          clientCb && clientCb(_roomId);
+        });
+      });
+
+      // TODO когда пользователь создаёт комнату или приглашается в чью-либо:
+      // TODO добавить пользователю комнату, а комнате -  пользователя. Это будут новые методы для сокета.
+
+      socket.on('message', function(text, callback) {
+        //сообщение идёт только в текущую комнату
+        socket.broadcast.to(socket.room).emit('message', username, text);
+
+        callback && callback(); // если передан callback, то он вызывается на клиенте
+      });
+
+      socket.on('disconnect', function() {
+        //TODO указать список комнат пользователя
+        getUserRooms(username, function(err, roomList) {
+          if (err) log.error("getUserRoom: Ошибка: ", err);
+          socket.broadcast.emit('leave', username, roomList);
+          delete __users[username];
+        });
+      });
     });
-
-    socket.on('disconnect', function() {
-      socket.broadcast.emit('leave', username);
-    });
-
   });
 
   return io;
