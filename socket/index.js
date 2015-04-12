@@ -370,11 +370,10 @@ module.exports = function(server) {
       });
 
       socket.on('disconnect', function() {
-        //TODO указать список комнат пользователя
+        delete __users[username];
         getUserRooms(username, function(err, roomList) {
           if (err) log.error("getUserRoom: Ошибка: ", err);
           socket.broadcast.emit('leave', username, roomList);
-          delete __users[username];
         });
       });
     });

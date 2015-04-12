@@ -1,5 +1,6 @@
 'use strict';
 $(document).on("ready", function() {
+    //TODO добавить валидацию логина и пароля: допустимые символы, максимальная длина
     $(document.forms['login-form']).on('submit', function() {
         var form = $(this);
 

@@ -8,6 +8,7 @@ exports.get = function(req, res) {
 };
 
 exports.post = function(req, res, next) {
+  //TODO добавить валидацию логина и пароля: допустимые символы, максимальная длина
   var username = req.body.username;
   var password = req.body.password;
 

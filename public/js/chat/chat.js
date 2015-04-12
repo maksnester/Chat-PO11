@@ -47,12 +47,12 @@ socket
     })
     .on('leave', function (username, roomList) {
         // событие надо обрабатывать только тогда, когда текущая комната среди тех, в которых есть этот пользователь
-        if (isCurrentRoomInList(roomList)) {
+        if (roomsList.isCurrentRoomInList(roomList)) {
             setUserStatusOnline(username, false);
         }
     })
     .on('join', function (username, roomList) {
-        if (isCurrentRoomInList(roomList)) {
+        if (roomsList.isCurrentRoomInList(roomList)) {
             setUserStatusOnline(username, true);
         }
     })
@@ -60,7 +60,8 @@ socket
         printStatus("соединение установлено");
         socket.emit("switchRoom", "all", function(roomId) {
             input.prop('disabled', false);
-            currentRoom = {_id: roomId, roomName: "all"};
+            roomsList.currentRoom = {_id: roomId, roomName: "all"};
+            roomsList.showRooms();
         });
     })
     .on('updateMembersList', function(usersInRoom) {
@@ -70,6 +71,7 @@ socket
         printStatus("соединение потеряно");
         input.prop('disabled', true);
         membersList.clear();
+        roomsList.clear();
         this.$emit('error');
     })
     .on('logout', function () {
@@ -120,9 +122,7 @@ function printStatus(status) {
  * @param isOnline
  */
 function setUserStatusOnline (username, isOnline) {
-    //TODO обновить статус пользователя в правом блоке чата
     membersList.setUserStatusOnline(username, isOnline);
-    console.log("User %o - online: %o.", username, isOnline);
 
     var msg = isOnline ? " вошёл в чат." : " вышел из чата.";
     printStatus(username + msg);
@@ -146,4 +146,4 @@ function wrapWithClass(text, classname) {
 //              'Msg random number: ' + Math.random() + '\n' +
 //              'Current date: ' + new Date());
 //    sendMessage();
-//}, 1000);
+//}, 2500);

@@ -29,15 +29,10 @@ $(document).ready(function() {
          */
         var update = function(chatMembers) {
             if (chatMembers && chatMembers.onlineUsers && chatMembers.offlineUsers) {
-                var _this = this;
                 this.onlineUsers = chatMembers.onlineUsers;
-                chatMembers.onlineUsers.forEach(function(elem) {
-                    _this.view.onlineUsers.append('<li class="hoverable">' + elem + '</li>');
-                });
+                this.view.onlineUsers.append(convertArrayToListItems(this.onlineUsers, 'hoverable'));
                 this.offlineUsers = chatMembers.offlineUsers;
-                chatMembers.offlineUsers.forEach(function(elem) {
-                    _this.view.offlineUsers.append('<li class="hoverable">' + elem + '</li>');
-                });
+                this.view.offlineUsers.append(convertArrayToListItems(this.offlineUsers, 'hoverable'));
             } else {
                 this.view.onlineUsers[0].innerHTML = "server error";
             }
@@ -69,7 +64,7 @@ $(document).ready(function() {
 
                 sourceView.find('li').filter(function() { return $.text([this]) === username; }).remove();
                 destinationView.append('<li class="hoverable">' + username + '</li>');
-            } else if (isOnline) {
+            } else if (isOnline && destination.indexOf(username) < 0) {
                 // пользователь новый и входит в комнату
                 destination.push(username);
                 destinationView.append('<li class="hoverable">' + username + '</li>');
