@@ -8,9 +8,15 @@ exports.get = function(req, res) {
 };
 
 exports.post = function(req, res, next) {
-  //TODO добавить валидацию логина и пароля: допустимые символы, максимальная длина
+  //TODO добавить валидацию пароля
   var username = req.body.username;
   var password = req.body.password;
+
+  if (!username || !password) {
+    return next(new HttpError(403, "Некорректные данные логина или пароля. Пустой логин или пароль."));
+  } else if (username.length > 32) {
+    return next(new HttpError(403, "Слишком длинный логин. Максимальная длина = 32 символам."));
+  }
 
   User.authorize(username, password, function(err, user) {
     if (err) {

@@ -1,8 +1,14 @@
 'use strict';
 $(document).on("ready", function() {
-    //TODO добавить валидацию логина и пароля: допустимые символы, максимальная длина
+    //TODO добавить валидацию пароля
     $(document.forms['login-form']).on('submit', function() {
+
         var form = $(this);
+
+        if (form[0].username.value.length > 32) {
+            $('.error', form).html('Длина логина не должна превышать 32 символов.');
+            return false;
+        }
 
         $('.error', form).html('');
         $(":submit", form).button("loading");

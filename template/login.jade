@@ -7,11 +7,11 @@ block content
       h4.form-group Введите имя пользователя и пароль. Если такого пользователя нет - он будет создан.
       .form-group
          label.control-label(for="input-username") Имя
-         input.form-control#input-username(name="username" value="name" type="text" placeholder="Имя")
+         input.form-control#input-username(name="username" value="name" type="text" placeholder="Имя" required)
 
       .form-group
          label.control-label(for="input-password") Пароль
-         input.form-control#input-password(name="password" type="password" placeholder="Пароль")
+         input.form-control#input-password(name="password" type="password" placeholder="Пароль" required)
 
       .form-group
          button.btn.btn-primary(type="submit" data-loading-text="Отправляю...") Войти
