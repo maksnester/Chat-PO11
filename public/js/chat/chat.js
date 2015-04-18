@@ -58,11 +58,9 @@ socket
     })
     .on('connect', function () {
         printStatus("соединение установлено");
-        socket.emit("switchRoom", "all", function(roomId) {
-            input.prop('disabled', false);
-            roomsList.currentRoom = {_id: roomId, roomName: "all"};
-            roomsList.showRooms();
-        });
+        switchRoom(roomsList.currentRoom.roomName || "all");
+        input.prop('disabled', false);
+        roomsList.showRooms();
     })
     .on('updateMembersList', function(usersInRoom) {
         membersList.update(usersInRoom);

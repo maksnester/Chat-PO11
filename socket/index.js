@@ -114,7 +114,6 @@ getDefaultRoomId(function(id) {DEFAULT_ROOM_ID = id;});
  * @param callback
  */
 function checkUserDefaultRoom(username, callback) {
-  console.log("Start checking user default room");
   User.findOne({username: username}, function (err, user) {
     if (err) callback(err);
     if (!user) callback("User " + username + " not found.");
@@ -182,7 +181,7 @@ function getDefaultRoomId(callback) {
     if (err) return log.error(err);
     if (!room) {
       //создаём
-      var defaultRoom = new Room({special: 'default room'});
+      var defaultRoom = new Room({special: 'default room', roomName: 'all'});
       defaultRoom.save(function(err, room) {
         if (err || !room) return log.error("Error creating default room: %s.", err);
         callback(room._id);
@@ -348,6 +347,7 @@ module.exports = function(server) {
             getUserRooms(username, callback);
           },
           function (roomList, callback) {
+            //TODO здесь ошибка. Не нужно делать join при смене комнаты. Иначе при каждой смене в чате будет спам вида "user вошёл в чат" для всех, кто видит этого юзера в своей комнате
             socket.broadcast.emit('join', username, roomList);
             callback(null);
           }

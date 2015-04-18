@@ -16,6 +16,14 @@ block body
          #chats
             h4 CHATS
             ul#roomsList
+            form#newRoom
+               input(type="text" name="roomName" maxlength="32" required)
+               button(type="submit")
+                  span.glyphicon.glyphicon-ok
+               button.dismiss(type="button")
+                  span.glyphicon.glyphicon-remove
+               span.help-block.error
+            .btn.btn-sm.hoverable#addRoom Создать комнату
          #me
             |Здесь должны появится:
             |Аватар
@@ -31,7 +39,11 @@ block body
                ul#online-users
                span offline:
                ul#offline-users
-
+            #members-list-controls
+               .btn.btn-xs.btn-success#invite
+                  | Пригласить пользователей
+               .btn.btn-xs.btn-danger#kick
+                  | Исключить пользователей
 
       #center.container-fluid
          #messages.row

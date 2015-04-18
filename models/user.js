@@ -53,7 +53,7 @@ schema.virtual('password')
 schema.methods.checkPassword = function(password) {
   return this.encryptPassword(password) === this.hashedPassword;
 };
-
+//TODO !!! нужно вынести сюда все функции, касающиеся пользователя и его групп из socket/index.js !!!
 schema.statics.authorize = function(username, password, callback) {
   var User = this;
 

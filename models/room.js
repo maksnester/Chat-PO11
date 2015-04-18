@@ -11,8 +11,10 @@ var Schema = mongoose.Schema;
 var schema = new Schema({
     special: {
         type: String,
-        unique: true
+        unique: true,
+        sparse: true
     },
+    roomName: String,
     users: [String]
 });
 

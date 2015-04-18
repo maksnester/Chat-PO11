@@ -13,6 +13,50 @@
     color: rgb(171, 155, 169);
 }
 
+#roomsList {
+    padding-left: 30px;
+    overflow: auto;
+    height: 75%;
+}
+
+#roomsList > li {
+    overflow-wrap: break-word;
+}
+
+/*#newRoom - это форма*/
+#newRoom {
+    padding-left: 8px;
+}
+
+#newRoom > input {
+    padding-left: 5px;
+    width: 145px;
+}
+
+#newRoom > button[type="submit"]:hover {
+    background-color: #47a447;
+    border-color: #398439;
+}
+#newRoom > button.dismiss:hover {
+    background-color: #d2322d;
+    border-color: #ac2925;
+}
+
+/*кнопка, показывающая форму*/
+#addRoom {
+    color: #FCFEFF;
+    background-color: #938A8A;
+    border-color: #66421E;
+    position: absolute;
+    left: 40px;
+    bottom: 10px;
+}
+@media(max-height: 517px){
+    #addRoom {
+        position: relative;
+    }
+}
+
 #logo {
     height: 10%;
     background: url("/img/logo.jpg");
@@ -28,6 +72,7 @@
 #chats {
     height: 75%;
     border-bottom: 3px solid black;
+    position: relative;
 }
 
 #center {
@@ -106,6 +151,25 @@
     text-decoration: underline;
 }
 
+#members-list-controls > .btn {
+    width: 130px;
+    margin-right: 10px;
+    margin-top: 10px;
+    white-space: normal;
+    background-color: #938A8A;
+    border-color: #66421E;
+}
+
+#members-list-controls > .btn-success:hover, #addRoom:hover {
+    background-color: #47a447;
+    border-color: #398439;
+}
+
+#members-list-controls > .btn-danger:hover {
+    background-color: #d2322d;
+    border-color: #ac2925;
+}
+
 #members-list {
     padding-top: 10px;
 }
@@ -121,4 +185,8 @@
 
 .myMsg {
     font-weight: bold;
+}
+
+.help-block {
+    color: #cb7661;
 }

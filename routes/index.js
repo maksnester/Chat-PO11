@@ -1,4 +1,5 @@
 var checkAuth = require('middleware/checkAuth');
+var chat = require('./chat');
 
 module.exports = function(app) {
 
@@ -9,8 +10,9 @@ module.exports = function(app) {
 
   app.post('/logout', require('./logout').post);
 
-  app.get('/chat/rooms', checkAuth, require('./chat').getUserRooms);
-  app.get('/chat', checkAuth, require('./chat').get);
+  app.post('/chat/rooms/new', checkAuth, chat.newRoom);
+  app.get('/chat/rooms', checkAuth, chat.getUserRooms);
+  app.get('/chat', checkAuth, chat.get);
 
   app.get('/account', checkAuth, require('./account').get);
 
