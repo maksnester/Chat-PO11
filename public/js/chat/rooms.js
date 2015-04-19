@@ -123,7 +123,7 @@ $(document).ready(function() {
                 switchRoom(roomName);
 
                 // показать кнопки управления пользвоателями, если текущая комната не all
-                membersList.showControls();
+
 
                 // убрать форму ввода
                 newRoomForm.hide();
@@ -140,11 +140,13 @@ $(document).ready(function() {
 /**
  * Делает указанную комнату текущей. Сокет эмитирует событие switchRoom
  * @param roomName
+ * @param callback
  */
-function switchRoom(roomName) {
+function switchRoom(roomName, callback) {
     socket.emit("switchRoom", roomName, function (roomId) {
         roomsList.currentRoom = {_id: roomId, roomName: roomName};
-
+        membersList.showControls();
+        callback && callback();
         //TODO здесь надо как-то подгрузить сообщения
     });
 }
