@@ -23,6 +23,12 @@
     overflow-wrap: break-word;
 }
 
+.current-room {
+    font-weight: bold;
+    color: rgb(234, 235, 255);
+    text-decoration: underline;
+}
+
 /*#newRoom - это форма*/
 #newRoom {
     padding-left: 8px;

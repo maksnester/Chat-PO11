@@ -60,7 +60,10 @@ socket
         printStatus("соединение установлено");
         switchRoom(roomsList.currentRoom.roomName || "all");
         input.prop('disabled', false);
-        roomsList.showRooms();
+        roomsList.showRooms(function() {
+            // здесь нужно вручную вызвать обновление текущей комнаты - список часто не успевает показаться до обновления
+            roomsList.updateCurrent(roomsList.currentRoom.roomName || "all");
+        });
     })
     .on('updateMembersList', function(usersInRoom) {
         membersList.update(usersInRoom);

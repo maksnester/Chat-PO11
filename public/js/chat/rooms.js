@@ -37,8 +37,9 @@ $(document).ready(function() {
 
         /**
          * Отображает на левой панели список комнат
+         * @param [callback]
          */
-        function showRooms() {
+        function showRooms(callback) {
             getRoomsList(function(result) {
                 if (!result) return;
 
@@ -46,7 +47,9 @@ $(document).ready(function() {
                 result.forEach(function(elem) {
                     roomsNames.push(elem.roomName);
                 });
-                roomsList.view.append(convertArrayToListItems(roomsNames, "hoverable"));
+                roomsList.view.list.append(convertArrayToListItems(roomsNames, "hoverable"));
+
+                callback && callback();
             });
         }
 
@@ -54,8 +57,9 @@ $(document).ready(function() {
          * Очищает список комнат.
          */
         function clear() {
-            this.rooms = [];
-            this.view.empty();
+            // но при этом текущая комната не очищается =|
+            roomsList.rooms = [];
+            roomsList.view.list.empty();
         }
 
         /**
@@ -63,13 +67,43 @@ $(document).ready(function() {
          * @param roomName
          */
         function add(roomName) {
-            this.rooms.push(roomName);
-            this.view.append(convertArrayToListItems([roomName], "hoverable"));
+            roomsList.rooms.push(roomName);
+            roomsList.view.list.append(convertArrayToListItems([roomName], "hoverable"));
+        }
+
+        /**
+         * Устанавливает новую комнату в качестве текущей.
+         * Подсвечивает текущую комнату в списке комнат.
+         *
+         * @param roomName
+         * @param [roomId]
+         */
+        function updateCurrent (roomName, roomId) {
+
+            //модель
+            roomsList.currentRoom.roomName = roomName;
+            if (roomId) roomsList.currentRoom._id = roomId;
+
+            //представление
+
+            if (roomsList.view.current && roomsList.view.current.length > 0) {
+                //снять старый класс
+                roomsList.view.current.removeClass('current-room');
+            }
+
+            // найти в ul элемент с названием комнаты === roomName и установить класс
+            var newCurrent = $('li').filter(function() { return $.text([this]) === roomName; });
+            newCurrent.addClass('current-room');
+
+            roomsList.view.current = newCurrent;
         }
 
         return {
             rooms: [],
-            view: $('#roomsList'),
+            view: {
+                list: $('#roomsList')
+            },
+            updateCurrent: updateCurrent,
             isCurrentRoomInList: isCurrentRoomInList,
             getRoomsList: getRoomsList,
             showRooms: showRooms,
@@ -140,11 +174,11 @@ $(document).ready(function() {
 /**
  * Делает указанную комнату текущей. Сокет эмитирует событие switchRoom
  * @param roomName
- * @param callback
+ * @param [callback]
  */
 function switchRoom(roomName, callback) {
     socket.emit("switchRoom", roomName, function (roomId) {
-        roomsList.currentRoom = {_id: roomId, roomName: roomName};
+        roomsList.updateCurrent(roomName, roomId);
         membersList.showControls();
         callback && callback();
         //TODO здесь надо как-то подгрузить сообщения
