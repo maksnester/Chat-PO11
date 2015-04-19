@@ -98,17 +98,30 @@ $(document).ready(function() {
             roomsList.view.current = newCurrent;
         }
 
+        /**
+         * Если текущая комната не all, то показать кнопки "пригласить/исключить пользователей"
+         */
+        function showControls() {
+            if (roomsList.currentRoom.roomName !== 'all') {
+                roomsList.view.controls.show();
+            } else {
+                roomsList.view.controls.hide();
+            }
+        }
+
         return {
             rooms: [],
             view: {
-                list: $('#roomsList')
+                list: $('#roomsList'),
+                controls: $('#room-controls')
             },
             updateCurrent: updateCurrent,
             isCurrentRoomInList: isCurrentRoomInList,
             getRoomsList: getRoomsList,
             showRooms: showRooms,
             clear: clear,
-            add: add
+            add: add,
+            showControls: showControls
         }
     })();
 
@@ -133,6 +146,10 @@ $(document).ready(function() {
             switchRoom(roomName);
         }
     });
+
+    // управление пользователями в комнате
+
+
 
 
 
@@ -179,7 +196,7 @@ $(document).ready(function() {
 function switchRoom(roomName, callback) {
     socket.emit("switchRoom", roomName, function (roomId) {
         roomsList.updateCurrent(roomName, roomId);
-        membersList.showControls();
+        roomsList.showControls();
         callback && callback();
         //TODO здесь надо как-то подгрузить сообщения
     });

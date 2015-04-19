@@ -76,31 +76,18 @@ $(document).ready(function() {
             }
         };
 
-        /**
-         * Если текущая комната не all, то показать кнопки "пригласить/исключить пользователей"
-         */
-        function showControls() {
-            if (roomsList.currentRoom.roomName !== 'all') {
-                membersList.view.controls.show();
-            } else {
-                membersList.view.controls.hide();
-            }
-        }
-
         return {
             view: {
                 onlineUsers: $('#online-users'),
-                offlineUsers: $('#offline-users'),
-                controls: $('#members-list-controls')
+                offlineUsers: $('#offline-users')
             },
             onlineUsers: [],
             offlineUsers: [],
             clear: clear,
             update: update,
-            setUserStatusOnline: setUserStatusOnline,
-            showControls: showControls
+            setUserStatusOnline: setUserStatusOnline
         }
     })();
 
-    membersList.view.controls.hide();
+    roomsList.view.controls.hide();
 });
