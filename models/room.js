@@ -3,8 +3,6 @@
  * Содержит _id и хранит список ссылок на своих пользователей.
  */
 
-//TODO Убрать special - это костыль, чтобы создавать группу по-умолчанию.
-
 var mongoose = require('lib/mongoose');
 var Schema = mongoose.Schema;
 
@@ -18,13 +16,14 @@ var schema = new Schema({
     users: [String]
 });
 
+var DEFAULT_ROOM_ID;
 /**
  * Ищет комнату, у которой поле special = 'default room'.
  * Если такой комнаты нет, то создаёт её.
  * @param callback - через колбэк возвращаем id комнаты
  */
 schema.statics.getDefaultRoomId = function (callback) {
-    if (this._DEFAULT_ROOM_ID) return callback(null, this._DEFAULT_ROOM_ID);
+    if (DEFAULT_ROOM_ID) return callback(null, DEFAULT_ROOM_ID);
     var Room = this;
     Room.findOne({special: 'default room'}, '_id', function(err, room) {
         if (err) return callback(err);
@@ -32,8 +31,8 @@ schema.statics.getDefaultRoomId = function (callback) {
             //создаём
             var defaultRoom = new Room({special: 'default room', roomName: 'all'});
             defaultRoom.save(function(err, room) {
-                if (err || !room) return log.error("Error creating default room: %s.", err);
-                Room._DEFAULT_ROOM_ID = room._id;
+                if (err || !room) return console.error("Error creating default room: %s.", err);
+                DEFAULT_ROOM_ID = room._id;
                 callback(null, room._id);
             });
         } else {
@@ -44,28 +43,32 @@ schema.statics.getDefaultRoomId = function (callback) {
 };
 
 /**
- * Добавляет логин пользователя в список
- * @param username
+ * Добавляет логины пользователей в список
+ * @param {Array} usernames
  * @param {ObjectId} roomId
- * @param callback
+ * @param callback (err, комната)
  */
-schema.statics.addUserToRoom = function (username, roomId, callback) {
+schema.statics.addUsersToRoom = function (usernames, roomId, callback) {
     var Room = this;
     Room.findById(roomId, function (err, room) {
         if (err) return callback(err);
         if (!room) return callback(new Error("WARNING! Room not found!"));
 
-        var foundUser = room.users.filter(function(user) {
-            return user === username;
-        }).pop();
+        // добавляем тех, кого в комнате ещё нет
+        var usersForAdd = usernames.filter(function(user) {
+            return room.users.indexOf(user) < 0;
+        });
 
-        if (!foundUser) {
-            room.users.push(username);
-            room.save(function(err, room) {
-                if (err) log.error(err);
-                callback(null);
+        if (usersForAdd.length) {
+            usersForAdd.forEach(function(username) {
+                room.users.push(username);
             });
-        } else callback(null);
+
+            room.save(function(err) {
+                if (err) return callback(err);
+                callback(null, room);
+            });
+        } else callback(null, room);
     });
 };
 

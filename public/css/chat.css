@@ -196,3 +196,7 @@
 .help-block {
     color: #cb7661;
 }
+
+#invitedUsers {
+    width: 350px;
+}

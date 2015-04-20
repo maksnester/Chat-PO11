@@ -51,3 +51,19 @@ block body
             textarea#input.col-xs-10(maxlength="4000" disabled tabindex="1")
             .col-xs-1
                .smile-icon
+
+   #inviteModal.modal.fade(tabindex="-1" role="dialog" aria-labelleby="inviteModalLabel")
+      .modal-dialog
+         .modal-content
+            .modal-header
+               button.close(type="button" data-dismiss="modal" aria-label="Close") &times;
+               h4#inviteModalLabel.modal-title Пригласить пользователей
+            form
+               .modal-body
+                  .form-group
+                     label(for="invitedUsers") Список пользователей
+                     br
+                     select#invitedUsers(multiple="multiple" size="15" name="invitedUsers[]" required)
+               .modal-footer
+                  button.btn.btn-default(type="button" data-dismiss="modal") Отмена
+                  button.btn.btn-primary(type="submit") Пригласить

@@ -11,6 +11,8 @@ module.exports = function(app) {
   app.post('/logout', require('./logout').post);
 
   app.post('/chat/rooms/new', checkAuth, chat.newRoom);
+
+  app.get('/chat/users', checkAuth, chat.getAllUsers);
   app.get('/chat/rooms', checkAuth, chat.getUserRooms);
   app.get('/chat', checkAuth, chat.get);
 

@@ -1,7 +1,8 @@
 var roomsList;
+var inviteForm;
 
-$(document).ready(function() {
-    roomsList = (function() {
+$(document).ready(function () {
+    roomsList = (function () {
         /**
          * Ищет текущую комнату пользователя в указанном списке. Проверка по _id комнаты.
          * @param {Object} [roomList] если отсутствует, то очистятся оба списка
@@ -20,15 +21,15 @@ $(document).ready(function() {
          * Пользователя сервер узнаёт по сессии.
          * @param callback
          */
-        function getRoomsList (callback) {
+        function getRoomsList(callback) {
             $.ajax({
                 url: 'http://' + window.location.host + '/chat/rooms',
                 method: 'get',
-                success: function(data) {
+                success: function (data) {
                     roomsList.rooms = data;
                     callback(data);
                 },
-                error: function(jqXHR, textStatus) {
+                error: function (jqXHR, textStatus) {
                     console.error(textStatus);
                     callback(null);
                 }
@@ -40,11 +41,11 @@ $(document).ready(function() {
          * @param [callback]
          */
         function showRooms(callback) {
-            getRoomsList(function(result) {
+            getRoomsList(function (result) {
                 if (!result) return;
 
                 var roomsNames = [];
-                result.forEach(function(elem) {
+                result.forEach(function (elem) {
                     roomsNames.push(elem.roomName);
                 });
                 roomsList.view.list.append(convertArrayToListItems(roomsNames, "hoverable"));
@@ -78,7 +79,7 @@ $(document).ready(function() {
          * @param roomName
          * @param [roomId]
          */
-        function updateCurrent (roomName, roomId) {
+        function updateCurrent(roomName, roomId) {
 
             //модель
             roomsList.currentRoom.roomName = roomName;
@@ -92,7 +93,9 @@ $(document).ready(function() {
             }
 
             // найти в ul элемент с названием комнаты === roomName и установить класс
-            var newCurrent = $('li').filter(function() { return $.text([this]) === roomName; });
+            var newCurrent = $('li', roomsList.view.list).filter(function () {
+                return $.text([this]) === roomName;
+            });
             newCurrent.addClass('current-room');
 
             roomsList.view.current = newCurrent;
@@ -131,15 +134,15 @@ $(document).ready(function() {
     // добавление комнаты
     var newRoomForm = $('#newRoom').hide();
     newRoomForm.on("submit", onNewRoomSubmit);
-    $('#addRoom').on('click', function() {
+    $('#addRoom').on('click', function () {
         newRoomForm.show();
     });
-    $('.dismiss', newRoomForm).on("click", function() {
+    $('.dismiss', newRoomForm).on("click", function () {
         newRoomForm.hide();
     });
 
     // переключение комнат
-    $('#roomsList').on("click", function(event) {
+    $('#roomsList').on("click", function (event) {
         if (event.target.tagName.toLowerCase() === 'li') {
             var roomName = event.target.textContent || event.target.innerText;
 
@@ -148,9 +151,56 @@ $(document).ready(function() {
     });
 
     // управление пользователями в комнате
+    inviteForm = $('#inviteModal');
+    $('#invite', roomsList.view.controls).on("click", function () {
+        $('#invitedUsers', inviteForm).empty();
+        inviteForm.modal('show');
+        getAllUsers(function (err, users) {
+            if (err) return console.error(err);
+            //идём по всем пользователям и создаём с ними options
+            //юзернеймы пришли в формате [{username: "vasya"},...]
+            console.info("Список пользователей получен.");
+            if (users && users.length) {
+                users.forEach(function(user, index) {
+                    users[index] = user.username;
+                });
+                var resultStr = '<option>' + users.join('</option><option>') + '</option>';
+                $('#invitedUsers', inviteForm).append(resultStr);
+            }
+        });
+    });
+    $('#invitedUsers', inviteForm).mousedown(function (e) {
+        e.preventDefault();
+        var scroll = this.scrollTop;
+        e.target.selected = !e.target.selected;
+        this.scrollTop = scroll;
+        $(this).focus();
+    }).mousemove(function (e) {
+        e.preventDefault();
+    });
 
+    inviteForm.on("submit", function (event) {
+        event.preventDefault();
+        var selectedUsers = [].filter.call($('select', inviteForm)[0].options, function(opt) {return opt.selected === true;});
+        selectedUsers.forEach(function(elem, index) {
+           selectedUsers[index] = elem.textContent || elem.innerText;
+        });
 
+        if (!selectedUsers.length) return;
 
+        var data = {
+            roomName: roomsList.currentRoom.roomName,
+            invitedUsers: selectedUsers
+        };
+        socket.emit("inviteUsers", data, function (err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+
+            inviteForm.modal('hide');
+        });
+    });
 
 
     /**
@@ -194,7 +244,9 @@ $(document).ready(function() {
  * @param [callback]
  */
 function switchRoom(roomName, callback) {
+    console.info('called switchRoom');
     socket.emit("switchRoom", roomName, function (roomId) {
+        console.info('switchRoom callback executes.');
         roomsList.updateCurrent(roomName, roomId);
         roomsList.showControls();
         callback && callback();
@@ -212,4 +264,22 @@ function convertArrayToListItems(array, classNames) {
         array = [array];
     }
     return '<li class="' + classNames + '">' + array.join('</li><li class="' + classNames + '">') + '</li>';
+}
+
+/**
+ * Получить с сервера список всех логинов.
+ * @param callback
+ */
+function getAllUsers(callback) {
+    $.ajax({
+        method: 'get',
+        url: 'http://' + window.location.host + '/chat/users',
+        success: function (data) {
+            callback(null, data);
+        },
+        error: function (error) {
+            console.error(error);
+            callback(error);
+        }
+    });
 }

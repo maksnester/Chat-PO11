@@ -28,6 +28,7 @@ $(document).ready(function() {
          * @param chatMembers - объект с двумя полями-массивами: onlineUsers и offlineUsers
          */
         var update = function(chatMembers) {
+            console.info("chatMembers: %o", chatMembers);
             if (chatMembers) {
                 this.clear();
                 if (chatMembers.onlineUsers && chatMembers.onlineUsers.length > 0) {

@@ -65,8 +65,16 @@ socket
             roomsList.updateCurrent(roomsList.currentRoom.roomName || "all");
         });
     })
-    .on('updateMembersList', function(usersInRoom) {
-        membersList.update(usersInRoom);
+    .on('updateMembersList', function(usersInRoom, roomId) {
+        if (!roomId || roomId === roomsList.currentRoom._id) {
+            membersList.update(usersInRoom);
+        }
+    })
+    .on('invited', function(roomName) {
+        // вызывается, когда пользователя кто-то пригласил в комнату room, где room - название комнаты
+        // комнату добавляем в список, а в чатик пишем сообщение от сервера
+        roomsList.add(roomName);
+        printMessage("<b>SERVER</b>: <i>Вы были приглашены в комнату </i><b>" + roomName + "</b>");
     })
     .on('disconnect', function () {
         printStatus("соединение потеряно");

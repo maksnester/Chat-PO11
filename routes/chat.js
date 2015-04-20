@@ -56,3 +56,16 @@ exports.newRoom = function(req, res, next) {
     });
   });
 };
+
+/**
+ * Возвращает список всех пользователей чата.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.getAllUsers = function (req, res, next) {
+  User.find({}, "username -_id", {"username" : 1}, function(err, users) {
+    if (err) return next(err);
+    res.send(users);
+  })
+};

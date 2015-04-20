@@ -2,7 +2,6 @@ var crypto = require('crypto');
 var async = require('async');
 var util = require('util');
 var utils = require('lib/utils');
-var log = require('lib/log')(module);
 
 var mongoose = require('lib/mongoose');
 var Schema = mongoose.Schema;
@@ -34,8 +33,7 @@ var schema = new Schema({
                 ref: 'Group'
             },
             roomName: {
-                type: String,
-                unique: true
+                type: String
             }
         }
     ]
@@ -100,7 +98,7 @@ schema.statics.getUsersInRoom = function (username, roomName, callback) {
             return callback(err);
         }
         if (!user) {
-            log.error("User %s not found.", username);
+            console.error("User %s not found.", username);
             return callback(new Error("User " + username + " not found."));
         }
 
@@ -109,18 +107,18 @@ schema.statics.getUsersInRoom = function (username, roomName, callback) {
         }).pop();
 
         if (!room) {
-            log.error("Room %s not found in user %s", roomName, username);
-            return callback(new Error("Room " + roomName + " not found in user " + username));
+            console.error("Room %s not found in user %s", roomName, username);
+            return callback("Room " + roomName + " not found in user " + username);
         }
 
         var roomId = room._id;
-        Room.findById(roomId, 'users', function (err, result) {
+        Room.findById(roomId, 'users', {"users":1}, function (err, result) {
             if (err) {
-                log.error("Error while retrieving room %s from Rooms collection. Error: %s", roomName, err);
+                console.error("Error while retrieving room %s from Rooms collection. Error: %s", roomName, err);
                 return callback(err);
             }
             if (!result) {
-                log.error("Room %s not found in Rooms collection", roomName);
+                console.error("Room %s not found in Rooms collection. User is %s. RoomId is %s", roomName, username, roomId);
                 return callback(null, null);
             }
 
@@ -149,7 +147,7 @@ schema.statics.getRoomByNameInUser = function (roomName, username, callback) {
 };
 
 /**
- * Получить список комнат для пользователя и передать их через callback.
+ * Получить список комнат (объекты вида {_id: ObjectID(...), roomName: "name"}) для пользователя и передать их через callback.
  * @param username
  * @param callback (ошибка, комнаты)
  */
@@ -171,7 +169,7 @@ schema.statics.getUserRooms = function (username, callback) {
  */
 schema.statics.checkUserDefaultRoom = function (username, callback) {
     var User = this;
-    Room.getDefaultRoomId(function(err, DEFAULT_ROOM_ID) {
+    Room.getDefaultRoomId(function (err, DEFAULT_ROOM_ID) {
         if (err) return callback(err);
 
         User.findOne({username: username}, function (err, user) {
@@ -185,7 +183,7 @@ schema.statics.checkUserDefaultRoom = function (username, callback) {
                 user.save(function (err, user) {
                     if (err) return callback(err);
 
-                    Room.addUserToRoom(username, DEFAULT_ROOM_ID, function(err) {
+                    Room.addUsersToRoom([username], DEFAULT_ROOM_ID, function (err) {
                         if (err) return callback(err);
                         callback(null);
                     });
@@ -197,15 +195,59 @@ schema.statics.checkUserDefaultRoom = function (username, callback) {
 };
 
 /**
- * В коллекции Users добавляет пользователю комнату в список с указанным именем
- * @param room
- * @param username
+ * В коллекции Users добавляет пользователям комнату в список с указанным именем
+ * @param roomId
  * @param roomName
- * @param callback
+ * @param {Array} usernames
+ * @param callback (err, {user: имя комнаты)
  */
-schema.statics.addRoomToUser = function (room, username, roomName, callback) {
-    //not implemented yet
-    callback("addRoomToUser is not implemented yet.");
+schema.statics.addRoomToUsers = function (roomId, roomName, usernames, callback) {
+    var User = this;
+    console.info("Добавляем пользователям " + usernames + " комнату (" + roomId + "," + roomName + ").");
+
+    User.find({username: {$in: usernames}}, function (err, users) {
+        if (err) return callback(err);
+
+        console.info("Найдено пользователей: ", users.length || 0);
+
+        //оставить пользователей, у которых ещё нет добавляемой комнаты
+        users = users.filter(function (user) {
+            return !user.rooms.id(roomId);
+        });
+
+        console.info("Пользователи, которым нужно добавить комнату: ", users);
+        // среди этих пользователей нужно найти таких, у которых уже есть комната с таким НАЗВАНИЕМ
+        // т.к. предполагается уникальность имени комнаты внутри одного пользователя
+
+        var invitationResult = {}; // пары логин - локальное название комнаты
+
+        users.forEach(function (user, index) {
+            var localRoomName = checkName(users[index].rooms, roomName);
+            users[index].rooms.push({_id: roomId, roomName: localRoomName});
+            users[index].save(function(err, usr) {
+                if (err) return console.error("Во время добавления комнаты пользователю %s возникла ошибка: %s", usr, err);
+            });
+
+            invitationResult[users[index].username] = localRoomName;
+        });
+
+        callback(null, invitationResult);
+
+        /**
+         * Ищет имя комнаты в списке. Если уже есть, то дописывает к добавляемому имени единичку.
+         * @param rooms
+         * @param roomName
+         */
+        function checkName(rooms, roomName) {
+            var room = rooms.filter(function(room) {return room.roomName === roomName;}).pop();
+            if (room) {
+                roomName += "1";
+                return checkName(rooms, roomName);
+            }
+
+            return roomName;
+        }
+    });
 };
 
 module.exports.User = mongoose.model('User', schema);
