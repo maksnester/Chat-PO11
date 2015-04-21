@@ -4,6 +4,7 @@ block append scripts
    script(src="/vendor/bower_components/socket.io-client/dist/socket.io.js")
    script(src="/js/chat/rooms.js")
    script(src="/js/chat/membersList.js")
+   script(src="/js/chat/history.js")
    script(src="/js/chat/chat.js")
 block append stylesheets
    link(rel="stylesheet" href="/css/chat.css")
@@ -25,11 +26,22 @@ block body
                span.help-block.error
             .btn.btn-sm.hoverable#addRoom Создать комнату
          #me
-            |Здесь должны появится:
-            |Аватар
-            |Логин
-            |(Статус)
-
+            #avatar
+            #login
+            #menu.dropdown
+               button.btn.btn-default.dropdown-toggle#dropdownMenu2(type="button" data-toggle="dropdown" aria-expanded="false")
+                  span.caret
+               ul.dropdown-menu.up(role="menu" aria-labelledby="dropdownMenu2")
+                  li(role="presentation")
+                     a#historyButton(role="menuitem" tabindex="-1")
+                        span.glyphicon.glyphicon.glyphicon-envelope
+                        |&nbsp;История сообщений
+                  li(role="presentation")
+                     a(role="menuitem" tabindex="-1" href="/account")
+                        span.glyphicon.glyphicon-cog
+                        |&nbsp;Настройки аккаунта
+                  li(role="presentation")
+                     a(role="menuitem" tabindex="-1" href="" onclick="$('<form method=POST action=/logout>').appendTo('body').submit();return false") Выйти
       #right
          #right-header
             h3 Список пользователей
@@ -67,3 +79,19 @@ block body
                .modal-footer
                   button.btn.btn-default(type="button" data-dismiss="modal") Отмена
                   button.btn.btn-primary(type="submit") Пригласить
+   #historyModal.modal.fade(tabindex="-1" role="dialog" aria-labelleby="inviteModalLabel")
+      .modal-dialog
+         .modal-content
+            .modal-header
+               button.close(type="button" data-dismiss="modal" aria-label="Close") &times;
+               h4#inviteModalLabel.modal-title История сообщений
+            .modal-body
+               table#history.table.table-condensed.table-hover.table-striped
+                  thead
+                     tr
+                        th Дата
+                        th Пользователь
+                        th Сообщение
+                  tbody
+
+

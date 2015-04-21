@@ -112,7 +112,7 @@ schema.statics.getUsersInRoom = function (username, roomName, callback) {
         }
 
         var roomId = room._id;
-        Room.findById(roomId, 'users', {"users":1}, function (err, result) {
+        Room.findById(roomId, 'users', function (err, result) {
             if (err) {
                 console.error("Error while retrieving room %s from Rooms collection. Error: %s", roomName, err);
                 return callback(err);

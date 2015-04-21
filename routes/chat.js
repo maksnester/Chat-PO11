@@ -1,6 +1,7 @@
 var log = require('lib/log')(module);
 var User = require('models/user').User;
 var Room = require('models/room').Room;
+var Archive = require('models/archive').Archive;
 var HttpError = require('error').HttpError;
 
 exports.get = function(req, res) {
@@ -68,4 +69,24 @@ exports.getAllUsers = function (req, res, next) {
     if (err) return next(err);
     res.send(users);
   })
+};
+
+/**
+ * Возвращает историю сообщений
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.getHistory = function (req, res, next) {
+  var roomId = req.params.roomId;
+  var ARCHIVE_NOT_FOUND_ERR = "Архив не найден.";
+
+  Archive.getMessages(roomId, function (err, messages) {
+    if (err) {
+      if (err === ARCHIVE_NOT_FOUND_ERR) return next(new HttpError(404, err));
+      return next(new HttpError(500, err));
+    }
+
+    res.send(messages);
+  });
 };

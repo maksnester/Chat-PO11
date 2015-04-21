@@ -12,7 +12,9 @@ module.exports = function(app) {
 
   app.post('/chat/rooms/new', checkAuth, chat.newRoom);
 
+  // TODO здесь, конечно, кроме авторизации нужно проверять ещё и принадлежность пользователя запрашиваемой комнате
   app.get('/chat/users', checkAuth, chat.getAllUsers);
+  app.get('/chat/rooms/:roomId/history', checkAuth, chat.getHistory);
   app.get('/chat/rooms', checkAuth, chat.getUserRooms);
   app.get('/chat', checkAuth, chat.get);
 

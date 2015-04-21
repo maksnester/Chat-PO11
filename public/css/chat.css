@@ -205,3 +205,17 @@
     margin-left: 3px;
     color: rgb(255, 174, 0)
 }
+
+#menu {
+    float: right;
+}
+
+.up { bottom:100% !important; top:auto !important; }
+
+#dropdownMenu2 {
+    padding: 2px 6px;
+}
+
+#historyButton {
+     cursor: pointer;
+ }

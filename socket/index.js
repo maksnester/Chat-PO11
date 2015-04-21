@@ -7,6 +7,7 @@ var sessionStore = require('lib/sessionStore');
 var HttpError = require('error').HttpError;
 var User = require('models/user').User;
 var Room = require('models/room').Room;
+var Archive = require('models/archive').Archive;
 var express = require('express');
 
 function loadSession(sid, callback) {
@@ -210,6 +211,9 @@ module.exports = function (server) {
         });
 
         socket.on('message', function (text, callback) {
+            // сохраняем в историю сообщений
+            Archive.addMessage(socket.room, username, text);
+
             //сообщение идёт только в текущую комнату
             socket.broadcast.to(socket.room).emit('message', username, text, socket.room);
 

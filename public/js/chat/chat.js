@@ -283,6 +283,17 @@ function wrapWithClass(text, classname) {
     return '<span class="' + classname + '">' + text + '</span>'
 }
 
+Date.prototype.shortDate = function() {
+    var d = this.getDate();
+    var m = this.getMonth() + 1;
+    var y = this.getFullYear();
+
+    d = (d > 9) ? d : "0" + d;
+    m = (m > 9) ? m : "0" + m;
+
+    return d + "." + m + "." + y;
+};
+
 //Код, чтобы посылать сообщения автоматически
 //Кодгда нужно остановить - в консоли пишем: clearInterval(autoMsg);
 //var autoMsg = setInterval(function() {
