@@ -7,13 +7,15 @@ exports.get = function(req, res) {
   res.render('login');
 };
 
+var forbiddenLogins = ['я', 'server', 'admin'];
+
 exports.post = function(req, res, next) {
   //TODO добавить валидацию пароля
   var username = req.body.username;
   var password = req.body.password;
 
-  if (!username || !password) {
-    return next(new HttpError(403, "Некорректные данные логина или пароля. Пустой логин или пароль."));
+  if (!username || !password || forbiddenLogins.indexOf(username.toLowerCase()) > -1) {
+    return next(new HttpError(403, "Некорректные данные логина или пароля."));
   } else if (username.length > 32) {
     return next(new HttpError(403, "Слишком длинный логин. Максимальная длина = 32 символам."));
   }

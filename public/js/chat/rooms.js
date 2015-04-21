@@ -65,10 +65,11 @@ $(document).ready(function () {
 
         /**
          * Добавляет комнату в список
+         * @param roomId
          * @param roomName
          */
-        function add(roomName) {
-            roomsList.rooms.push(roomName);
+        function add(roomId, roomName) {
+            roomsList.rooms.push({_id: roomId, roomName: roomName});
             roomsList.view.list.append(convertArrayToListItems([roomName], "hoverable"));
         }
 
@@ -211,7 +212,6 @@ $(document).ready(function () {
     $('#roomsList').on("click", function (event) {
         if (event.target.tagName.toLowerCase() === 'li') {
             var roomName = event.target.textContent || event.target.innerText;
-
             switchRoom(roomName);
         }
     });
@@ -219,7 +219,7 @@ $(document).ready(function () {
     // управление пользователями в комнате
     inviteForm = $('#inviteModal');
     $('#invite', roomsList.view.controls).on("click", function () {
-        $('#invitedUsers', inviteForm).empty();
+        $('#invitedUsers', inviteForm).empty(); // список пользователей в форме приглашения
         inviteForm.modal('show');
         getAllUsers(function (err, users) {
             if (err) return console.error(err);
@@ -286,7 +286,7 @@ $(document).ready(function () {
             },
             success: function (data) {
                 var roomName = data.roomName;
-                roomsList.add(roomName);
+                roomsList.add(data._id, roomName);
                 switchRoom(roomName);
 
                 // показать кнопки управления пользвоателями, если текущая комната не all
@@ -310,10 +310,8 @@ $(document).ready(function () {
  * @param [callback]
  */
 function switchRoom(roomName, callback) {
-    //при переключении комнаты:
-    // * очистить счетчик новых сообщений
-    // * показать отложенные сообщения
     console.info('called switchRoom');
+    messageContainer.empty();
     socket.emit("switchRoom", roomName, function (roomId) {
         console.info('switchRoom callback executes.');
         roomsList.updateCurrent(roomName, roomId);
@@ -321,9 +319,10 @@ function switchRoom(roomName, callback) {
 
         if (deferredMessages[roomId]) {
             roomsList.showUnreadIndicator(roomId, false);
+            receivedMessages.showLast(settings.LAST_MESSAGES, roomId);
             deferredMessages.show(roomId);
         } else {
-            //TODO здесь надо как-то подгрузить сообщения. Кроме непрочитанных всё равно есть прочитанные.
+            receivedMessages.showLast(settings.LAST_MESSAGES, roomId);
         }
 
         callback && callback();

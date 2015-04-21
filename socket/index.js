@@ -45,13 +45,13 @@ function loadUser(session, callback) {
  * Подготавливает объект с online и offline пользователями.
  *
  * @param usersInRoom список пользователей, которых проверяем
- * @param __users это объект, у которого ключи - имена пользователей. Пользователь online, если он в этом объекте.
+ * @param connectedUsers это объект, у которого ключи - имена пользователей. Пользователь online, если он в этом объекте.
  * @returns {Object} вида {onlineUsers: [...], offlineUsers: [...]}
  */
-function splitUsersOnlineAndOffline(usersInRoom, __users) {
+function splitUsersOnlineAndOffline(usersInRoom, connectedUsers) {
     var membersList = {onlineUsers: [], offlineUsers: []};
     usersInRoom.forEach(function (elem) {
-        if (__users[elem]) {
+        if (connectedUsers[elem]) {
             membersList.onlineUsers.push(elem);
         } else {
             membersList.offlineUsers.push(elem);
@@ -140,12 +140,13 @@ module.exports = function (server) {
         });
     });
 
-    var __users = {};
+    // пара значений {логин: socket}
+    var connectedUsers = {};
 
     io.sockets.on('connection', function (socket) {
 
         var username = socket.handshake.user.get('username');
-        __users[username] = {socket: socket}; // сохраняем сокет пользователя для дальнейших обращений
+        connectedUsers[username] = {socket: socket}; // сохраняем сокет пользователя для дальнейших обращений
 
         console.log('connected socket. User %s', username);
 
@@ -174,36 +175,27 @@ module.exports = function (server) {
             var _roomId;
             async.waterfall([
                 function (callback) {
-                    console.log("Zero of waterfall for user %s", username);
                     if (roomName === "all") User.checkUserDefaultRoom(username, callback);
                     else callback(null);
                 },
                 function (callback) {
-                    console.log("First of waterfall for user %s", username);
                     //roomName - это пользовательское название комнаты. Получим из него _id комнаты
                     User.getRoomByNameInUser(roomName, username, callback);
                 },
                 function (roomId, callback) {
-                    console.log("Second of waterfall for user %s", username);
                     _roomId = roomId;
                     socket.room = roomId;
                     socket.join(roomId);
                     User.getUsersInRoom(username, roomName, callback);
                 },
                 function (usersInRoom, callback) {
-                    console.log("Third of waterfall for user %s", username);
                     //посылаем пользователю список людей в комнате, в которую он входит
                     //разделяем список на online и offline пользователей
-                    console.info("usersInRoom: ", usersInRoom);
-
-                    var membersList = splitUsersOnlineAndOffline(usersInRoom, __users);
-
-                    console.info("membersList: ", membersList);
+                    var membersList = splitUsersOnlineAndOffline(usersInRoom, connectedUsers);
                     socket.emit('updateMembersList', membersList);
                     User.getUserRooms(username, callback);
                 },
                 function (roomList, callback) {
-                    console.log("Fourth of waterfall for user %s", username);
                     //TODO здесь ошибка. Не нужно делать join при смене комнаты. Иначе при каждой смене в чате будет
                     // спам вида "user вошёл в чат" для всех, кто видит этого юзера в своей комнате
                     socket.broadcast.emit('join', username, roomList);
@@ -213,7 +205,6 @@ module.exports = function (server) {
                 if (err) {
                     console.error("При переходе в другую комнату возникли ошибки: ", err);
                 }
-                console.info("Waterfall завершен для пользователя %s", username);
                 clientCb && clientCb(_roomId);
             });
         });
@@ -226,6 +217,7 @@ module.exports = function (server) {
         });
 
         socket.on('inviteUsers', function (data, callback) {
+            console.info('on invite users');
             var invitedUsers = data.invitedUsers;
             var roomName = data.roomName;
             if (!invitedUsers || !roomName) return callback("Не указаны пользователи или комната для приглашения.");
@@ -257,16 +249,17 @@ module.exports = function (server) {
 
                     //итерация по ключам объекта users, где хранятся пары {login: локальное имя комнаты}
                     for (var username in users) {
-                        if (users.hasOwnProperty(username) && __users[username]) {
+                        if (users.hasOwnProperty(username) && connectedUsers[username]) {
                             // online пользователи входят в комнату и им присылается событие, что их пригласили
+                            // users[username] содержит локальное имя комнаты
 
-                            __users[username].socket.join(room._id);
-                            __users[username].socket.emit("invited", users[username]); // тут локальное имя комнаты
+                            connectedUsers[username].socket.join(room._id);
+                            connectedUsers[username].socket.emit("invited", {_id: room._id, roomName: users[username]});
                             console.info("Пользователю %s отправлено приглашение.", username);
                         }
                     }
 
-                    var usersList = splitUsersOnlineAndOffline(room.users, __users);
+                    var usersList = splitUsersOnlineAndOffline(room.users, connectedUsers);
 
                     // при обновлении комнаты нужно указать какая комната обновляется и послать это всем, кто в комнате
                     io.sockets.in(room._id).emit('updateMembersList', usersList, room._id);
@@ -276,7 +269,7 @@ module.exports = function (server) {
         });
 
         socket.on('disconnect', function () {
-            delete __users[username];
+            delete connectedUsers[username];
             User.getUserRooms(username, function (err, roomList) {
                 if (err) console.error("getUserRoom: Ошибка: ", err);
                 socket.broadcast.emit('leave', username, roomList);

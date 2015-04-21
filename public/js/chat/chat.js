@@ -6,16 +6,88 @@ var form;
 var onlineUsers;
 var offlineUsers;
 var autoscroll = true;
+
+var settings = {
+    /*Количество показываемых последних прочитанных сообщений при переходе в комнату*/
+    LAST_MESSAGES: 15
+};
+
 var deferredMessages = {
+    /**
+     * Выводит на экран все непрочитанные сообщения из комнаты roomId и помечает их прочитанными.
+     * @param roomId
+     */
     show: function (roomId) {
-        var messages = deferredMessages[roomId];
-        for (var i = 0; i < messages.length; i++) {
-            printMessage('<b>' + messages[i].username + '</b>: ' + messages[i].message);
+        if (!deferredMessages[roomId]) return;
+        printMessages(deferredMessages[roomId]);
+
+        // переводим отложенные сообщения в разряд прочитанных
+        for (var i = 0; i < deferredMessages[roomId].length; i++) {
+            var copy = {
+                username: deferredMessages[roomId][i].username,
+                message: deferredMessages[roomId][i].message
+            };
+            receivedMessages.addMessage(roomId, copy);
         }
 
         delete deferredMessages[roomId];
+    },
+    /**
+     * Добавляет сообщение в список непрочитанных
+     * @param roomId
+     * @param message объект в формате {username: ..., message: ...}
+     */
+    addMessage: function (roomId, message) {
+        if (!deferredMessages[roomId]) {
+            deferredMessages[roomId] = [];
+        }
+
+        deferredMessages[roomId].push(message)
     }
 }; // объект формата {roomId: [messages]}, где message = {username: ..., message: ...}
+
+var receivedMessages = {
+    /**
+     * Добавляет сообщение в список полученных
+     * @param roomId
+     * @param message объект в формате {username: ..., message: ...}
+     */
+    addMessage: function (roomId, message) {
+        // TODO можно сделать лимит хранения прочитанных сообщений и не пользоваться showLast
+        if (!receivedMessages[roomId]) {
+            receivedMessages[roomId] = [];
+        }
+
+        receivedMessages[roomId].push(message)
+    },
+
+    /**
+     * Выводит на экран все полученные сообщения.
+     * @param roomId
+     */
+    show: function (roomId) {
+        if (!receivedMessages[roomId]) return;
+        printMessages(receivedMessages[roomId]);
+    },
+
+    /**
+     * Выводит на экран n последних полученных сообщений для комнаты с id = roomId
+     * @param n
+     * @param roomId
+     */
+    showLast: function (n, roomId) {
+        var messages = receivedMessages[roomId];
+        if (!messages) return;
+        if (messages.length > n) {
+            // только n последних
+            printMessages(messages.slice(messages.length - n));
+        } else if (messages.length) {
+            // если сообщений < n, то печатать все что есть
+            // TODO но сначала нужно посмотреть в истории сообщений, может удастся взять оттуда
+            printMessages(messages);
+        }
+    }
+}; // объект такого же формата, что и deferredMessages
 
 $(document).ready(function() {
     // поле ввода сообщений
@@ -39,6 +111,17 @@ $(document).ready(function() {
     }).mouseleave(function() {
         autoscroll = true;
     });
+
+    /**
+     * Добавляет переданную строку к message контайнеру
+     * @param str может быть строкой, содержащей html (как правило, является таковой)
+     */
+    messageContainer.addText = function (str) {
+        messageContainer.append(getSafeString(str));
+        if (autoscroll) {
+            messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
+        }
+    };
 });
 
 var socket = io.connect('', {
@@ -47,17 +130,12 @@ var socket = io.connect('', {
 
 socket
     .on('message', function (username, message, roomId) {
-        //TODO разная логика для новых сообщений из активной и неактивных комнат
         if (roomId === roomsList.currentRoom._id) {
-            printMessage("<b>" + username + "</b>: " + message);
+            printMessage(username, message);
+            receivedMessages.addMessage(roomId, {username: username, message: message});
         } else {
             //если комната неактивна и из неё пришло новое сообщение, сохраняем его в отложенные сообщения
-
-            if (!deferredMessages[roomId]) {
-                deferredMessages[roomId] = [];
-            }
-
-            deferredMessages[roomId].push({username: username, message: message});
+            deferredMessages.addMessage(roomId, {username: username, message: message});
 
             //показываем, что пришло сообщение
             roomsList.showUnreadIndicator(roomId);
@@ -75,12 +153,13 @@ socket
         }
     })
     .on('connect', function () {
-        printStatus("соединение установлено");
         switchRoom(roomsList.currentRoom.roomName || "all");
+        printStatus("соединение установлено");
         input.prop('disabled', false);
         roomsList.showRooms(function() {
             // TODO было бы неплохо исправить этот момент как-то...
-            // здесь нужно вручную вызвать обновление текущей комнаты - список часто не успевает показаться до обновления
+            // здесь нужно вручную вызвать обновление текущей комнаты - список часто не успевает показаться до
+            // обновления
             roomsList.updateCurrent(roomsList.currentRoom.roomName || "all");
         });
     })
@@ -89,11 +168,11 @@ socket
             membersList.update(usersInRoom);
         }
     })
-    .on('invited', function(roomName) {
-        // вызывается, когда пользователя кто-то пригласил в комнату room, где room - название комнаты
+    .on('invited', function(room) {
+        // вызывается, когда пользователя кто-то пригласил в комнату room
         // комнату добавляем в список, а в чатик пишем сообщение от сервера
-        roomsList.add(roomName);
-        printMessage("<b>SERVER</b>: <i>Вы были приглашены в комнату </i><b>" + roomName + "</b>");
+        roomsList.add(room._id, room.roomName);
+        printMessage("SERVER", "<i>Вы были приглашены в комнату </i><b>" + room.roomName + "</b>");
     })
     .on('disconnect', function () {
         printStatus("соединение потеряно");
@@ -119,21 +198,59 @@ function sendMessage() {
     var text = input.val();
     if (!text || !text.trim()) return;
     socket.emit('message', text, function () {
-        printMessage(wrapWithClass('<b>Я: </b> ' + text, "mymsg"));
+        printMessage("Я", wrapWithClass(text, "mymsg"));
+        receivedMessages.addMessage(roomsList.currentRoom._id, {username: "Я", message: text});
     });
 
     input.val('');
     return false;
 }
 
-function printMessage(text) {
+/**
+ * Выводит на экран сообщение от пользователя username
+ *
+ * @param username
+ * @param message
+ */
+function printMessage(username, message) {
     // регулярка убирает переносы строк (если их больше 2х подряд, заменяются на 2 переноса)
     // и так как переносы строк приходят в формате "\n", то они меняются на тег "br"
-    text = '<p>' + text.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>').trim() + '</p>';
-    $(messageContainer).append(text);
-    if (autoscroll) {
-        messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
+    var text = '<p>' + '<b>' + username + '</b>: ' + message + '</p>';
+    messageContainer.addText(text);
+}
+
+/**
+ * Выводит на экран переданные сообщения.
+ *
+ * @param {Array} messages предполагается, что это массив объектов вида {username: login, message: msg}
+ */
+function printMessages(messages) {
+    if (!(Array.isArray(messages) && messages.length)) {
+        console.warn("printMessages: аргумент messages не является массивом. Messages = %o", messages);
+        return;
     }
+
+    var text = "";
+
+    for (var i = 0; i < messages.length; i++) {
+        text += "<p><b>";
+        text += messages[i].username;
+        text += "</b>: ";
+        text += messages[i].message;
+        text += "</p>"
+    }
+
+    messageContainer.addText(text);
+}
+
+/**
+ * Чистит строку от большого количества переносов строк.
+ * TODO сюда же стоит добавить удаление лишних html тегов. Например, скриптов.
+ * @param str
+ * @returns {string|string}
+ */
+function getSafeString(str) {
+    return str.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>').trim() || "";
 }
 
 function printStatus(status) {
