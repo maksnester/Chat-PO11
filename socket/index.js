@@ -218,12 +218,9 @@ module.exports = function (server) {
             });
         });
 
-        // TODO когда пользователь создаёт комнату или приглашается в чью-либо:
-        // TODO добавить пользователю комнату, а комнате -  пользователя. Это будут новые методы для сокета.
-
         socket.on('message', function (text, callback) {
             //сообщение идёт только в текущую комнату
-            socket.broadcast.to(socket.room).emit('message', username, text);
+            socket.broadcast.to(socket.room).emit('message', username, text, socket.room);
 
             callback && callback(); // если передан callback, то он вызывается на клиенте
         });
@@ -231,7 +228,7 @@ module.exports = function (server) {
         socket.on('inviteUsers', function (data, callback) {
             var invitedUsers = data.invitedUsers;
             var roomName = data.roomName;
-            if (!invitedUsers || !roomName) callback("Не указаны пользователи или комната для приглашения.");
+            if (!invitedUsers || !roomName) return callback("Не указаны пользователи или комната для приглашения.");
 
             User.getRoomByNameInUser(roomName, username, function (err, roomId) {
                 if (err) return callback(err);
@@ -244,8 +241,9 @@ module.exports = function (server) {
                         Room.addUsersToRoom(invitedUsers, roomId, cb);
                     }
                 ], function (err, result) {
-                    // здесь result это arr, arr[0] = {username: roomName} - список приглашенных (с именем сохраненной
-                    // комнаты), arr[1] = {...} - комната
+                    // здесь result это массив
+                    // result[0] = {username: roomName} - список приглашенных (с именем сохраненной комнаты),
+                    // result[1] = {...} - комната
                     if (err) {
                         console.error("Invitation failed. Data %o. Error: %o", data, err);
                         return callback(err);

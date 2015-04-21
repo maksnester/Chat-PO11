@@ -6,6 +6,16 @@ var form;
 var onlineUsers;
 var offlineUsers;
 var autoscroll = true;
+var deferredMessages = {
+    show: function (roomId) {
+        var messages = deferredMessages[roomId];
+        for (var i = 0; i < messages.length; i++) {
+            printMessage('<b>' + messages[i].username + '</b>: ' + messages[i].message);
+        }
+
+        delete deferredMessages[roomId];
+    }
+}; // объект формата {roomId: [messages]}, где message = {username: ..., message: ...}
 
 $(document).ready(function() {
     // поле ввода сообщений
@@ -36,14 +46,22 @@ var socket = io.connect('', {
 });
 
 socket
-    .on('message', function (username, message) {
+    .on('message', function (username, message, roomId) {
         //TODO разная логика для новых сообщений из активной и неактивных комнат
-        //если комната неактивна и из неё пришло новое сообщение, сохраняем его в отложенные сообщения
-        //показываем, что пришло сообщение
-        //при переключении комнаты:
-        // * очистить счетчик новых сообщений
-        // * показать отложенные сообщения
-        printMessage("<b>" + username + "</b>: " + message);
+        if (roomId === roomsList.currentRoom._id) {
+            printMessage("<b>" + username + "</b>: " + message);
+        } else {
+            //если комната неактивна и из неё пришло новое сообщение, сохраняем его в отложенные сообщения
+
+            if (!deferredMessages[roomId]) {
+                deferredMessages[roomId] = [];
+            }
+
+            deferredMessages[roomId].push({username: username, message: message});
+
+            //показываем, что пришло сообщение
+            roomsList.showUnreadIndicator(roomId);
+        }
     })
     .on('leave', function (username, roomList) {
         // событие надо обрабатывать только тогда, когда текущая комната среди тех, в которых есть этот пользователь
@@ -61,6 +79,7 @@ socket
         switchRoom(roomsList.currentRoom.roomName || "all");
         input.prop('disabled', false);
         roomsList.showRooms(function() {
+            // TODO было бы неплохо исправить этот момент как-то...
             // здесь нужно вручную вызвать обновление текущей комнаты - список часто не успевает показаться до обновления
             roomsList.updateCurrent(roomsList.currentRoom.roomName || "all");
         });

@@ -93,12 +93,11 @@ $(document).ready(function () {
             }
 
             // найти в ul элемент с названием комнаты === roomName и установить класс
-            var newCurrent = $('li', roomsList.view.list).filter(function () {
-                return $.text([this]) === roomName;
-            });
-            newCurrent.addClass('current-room');
-
-            roomsList.view.current = newCurrent;
+            var newCurrent = getRoomSelector(roomName);
+            if (newCurrent) {
+                newCurrent.addClass('current-room');
+                roomsList.view.current = newCurrent;
+            }
         }
 
         /**
@@ -110,6 +109,71 @@ $(document).ready(function () {
             } else {
                 roomsList.view.controls.hide();
             }
+        }
+
+        var indicator = '<span class="glyphicon glyphicon-comment"></span>';
+
+        /**
+         * Показывает (скрывает) в списке комнат индикатор новых сообщений для комнаты с id===roomId
+         * @param roomId
+         * @param {boolean} [show] если true или не указан - показать, если false - скрыть
+         */
+        function showUnreadIndicator(roomId, show) {
+
+            var roomName = findRoomNameById(roomId);
+            if (show === undefined) show = true;
+            showUnreadIndicatorByName(roomName, show);
+        }
+
+        /**
+         * Показывает (скрывает) в списке комнат индикатор новых сообщений для комнаты roomName
+         * @param roomName
+         * @param {boolean} show если true - показать, если false - скрыть
+         */
+        function showUnreadIndicatorByName(roomName, show) {
+            var roomSelector = getRoomSelector(roomName);
+            if (roomSelector) {
+                if (show) {
+                    if (roomSelector[0].lastChild.outerHTML !== indicator)
+                        roomSelector.append(indicator);
+                } else {
+                    roomSelector[0].removeChild(roomSelector[0].lastChild);
+                }
+            }
+        }
+
+        /**
+         * Ищет имя комнаты по заданному roomId
+         *
+         * @param roomId
+         * @returns {String} null - если комната не найдена
+         */
+        function findRoomNameById(roomId) {
+            var roomName = roomsList.rooms.filter(function(room) {return room._id === roomId}).pop().roomName;
+            if (!roomName) {
+                console.warn("Room with id %s not found in roomsList.", roomId);
+                return null;
+            }
+
+            return roomName;
+        }
+
+        /**
+         * Ищет в списке комнат на странице комнату с указанным именем.
+         *
+         * @param roomName
+         * @returns {*|jQuery} селектор найденной комнаты или null, если комнаты нет в списке
+         */
+        function getRoomSelector(roomName) {
+            var selector =  $('li', roomsList.view.list).filter(function () {
+                return $.text([this]) === roomName;
+            });
+
+            if (!selector.length) {
+                console.warn("getRoomSelector: Комната %s не найдена в списке комнат.", roomName);
+                return null;
+            }
+            return selector;
         }
 
         return {
@@ -124,7 +188,9 @@ $(document).ready(function () {
             showRooms: showRooms,
             clear: clear,
             add: add,
-            showControls: showControls
+            showControls: showControls,
+            showUnreadIndicator: showUnreadIndicator,
+            showUnreadIndicatorByName: showUnreadIndicatorByName
         }
     })();
 
@@ -244,13 +310,23 @@ $(document).ready(function () {
  * @param [callback]
  */
 function switchRoom(roomName, callback) {
+    //при переключении комнаты:
+    // * очистить счетчик новых сообщений
+    // * показать отложенные сообщения
     console.info('called switchRoom');
     socket.emit("switchRoom", roomName, function (roomId) {
         console.info('switchRoom callback executes.');
         roomsList.updateCurrent(roomName, roomId);
         roomsList.showControls();
+
+        if (deferredMessages[roomId]) {
+            roomsList.showUnreadIndicator(roomId, false);
+            deferredMessages.show(roomId);
+        } else {
+            //TODO здесь надо как-то подгрузить сообщения. Кроме непрочитанных всё равно есть прочитанные.
+        }
+
         callback && callback();
-        //TODO здесь надо как-то подгрузить сообщения
     });
 }
 

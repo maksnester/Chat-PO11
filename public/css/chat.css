@@ -200,3 +200,8 @@
 #invitedUsers {
     width: 350px;
 }
+
+.glyphicon-comment {
+    margin-left: 3px;
+    color: rgb(255, 174, 0)
+}
