@@ -250,6 +250,53 @@ schema.statics.addRoomToUsers = function (roomId, roomName, usernames, callback)
     });
 };
 
+/**
+ * Функция удаляет комнату у пользователя, а также удаляет пользователя из комнаты.
+ * @param roomName
+ * @param username
+ * @param callback (err, room)
+ */
+schema.statics.leaveRoom = function (roomName, username, callback) {
+    var User = this;
+    User.findOne({username: username}, function (err, user) {
+        if (err) return callback(err);
+        if (!user) return callback("Пользователь " + username + " не найден");
+
+        var index = utils.indexOfObjByAttr(user.rooms, "roomName", roomName);
+        if (index < 0) return callback("Комната " + roomName + " не найдена у пользователя " + username);
+
+        var roomId = user.rooms[index]._id;
+
+        user.rooms.splice(index, 1);
+        user.save(function(err) {
+            if (err) return callback(err);
+
+            Room.findById(roomId, function(err, room) {
+                if (err) return callback(err);
+                if (!room) return callback("Комната " + roomName + " с id=" + roomId + " не найдена в коллекции Rooms.");
+
+                var index = room.users.indexOf(username);
+                if (index > -1) {
+                    room.users.splice(index, 1);
+                    room.save(function (err, room) {
+                        if (err) return callback(err);
+                        if (!room.users.length) {
+                            // если в комнате больше нет пользователей - удаляем её
+                            //TODO а Archive для этой комнаты будем удалять? Надо ли?
+                            room.remove();
+                        }
+
+                        callback(null, room);
+                    });
+                } else {
+                    return callback("В комнате " + roomName + " с id=" + roomId + " не найден пользователь " + username);
+                }
+            })
+        })
+
+    });
+};
+
 module.exports.User = mongoose.model('User', schema);
 
 

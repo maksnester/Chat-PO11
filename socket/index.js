@@ -274,6 +274,24 @@ module.exports = function (server) {
             });
         });
 
+        socket.on('leaveRoom', function(roomName, callback) {
+            User.leaveRoom(roomName, username, function(err, room) {
+                if (err) {
+                    console.error(err);
+                    return callback(err);
+                }
+                if (room) {
+                    socket.leave(room._id);
+
+                    var usersList = splitUsersOnlineAndOffline(room.users, connectedUsers);
+                    io.sockets.in(room._id).emit('updateMembersList', usersList, room._id);
+                    io.sockets.in(room._id).emit('userLeave', username, room._id);
+                }
+
+                callback(null);
+            });
+        });
+
         socket.on('disconnect', function () {
             delete connectedUsers[username];
             User.getUserRooms(username, function (err, roomList) {

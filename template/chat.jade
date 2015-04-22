@@ -37,7 +37,7 @@ block body
                         span.glyphicon.glyphicon.glyphicon-envelope
                         |&nbsp;История сообщений
                   li(role="presentation")
-                     a(role="menuitem" tabindex="-1" href="/account")
+                     a(role="menuitem" tabindex="-1" href="" onclick='window.open("/account", "_blank");return false;')
                         span.glyphicon.glyphicon-cog
                         |&nbsp;Настройки аккаунта
                   li(role="presentation")
@@ -54,8 +54,8 @@ block body
             #room-controls
                .btn.btn-xs.btn-success#invite
                   | Пригласить пользователей
-               .btn.btn-xs.btn-danger#kick
-                  | Исключить пользователей
+               .btn.btn-xs.btn-danger#leaveRoom
+                  | Покинуть комнату
 
       #center.container-fluid
          #messages.row

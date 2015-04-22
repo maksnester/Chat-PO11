@@ -177,6 +177,31 @@ $(document).ready(function () {
             return selector;
         }
 
+        /**
+         * Удаляет комнату из модели и представления.
+         * @param roomName
+         */
+        function removeRoom(roomName) {
+            var selector = getRoomSelector(roomName);
+            if (selector) selector.remove();
+            var index = 0;
+            while (index < roomsList.rooms.length) {
+                if (roomsList.rooms[index].roomName === roomName) {
+
+                    // и сообщения из этой комнаты выбрасываем
+                    if (receivedMessages[roomsList.rooms[index]._id]) {
+                        delete receivedMessages[roomsList.rooms[index]._id];
+                    }
+
+                    // удаляем саму комнату
+                    roomsList.rooms.splice(index,1);
+                    console.info("Room %s removed", roomName);
+                    break;
+                }
+                index++;
+            }
+        }
+
         return {
             rooms: [],
             view: {
@@ -191,7 +216,8 @@ $(document).ready(function () {
             add: add,
             showControls: showControls,
             showUnreadIndicator: showUnreadIndicator,
-            showUnreadIndicatorByName: showUnreadIndicatorByName
+            showUnreadIndicatorByName: showUnreadIndicatorByName,
+            removeRoom: removeRoom
         }
     })();
 
@@ -217,6 +243,8 @@ $(document).ready(function () {
     });
 
     // управление пользователями в комнате
+
+    // приглашение пользователей
     inviteForm = $('#inviteModal');
     $('#invite', roomsList.view.controls).on("click", function () {
         $('#invitedUsers', inviteForm).empty(); // список пользователей в форме приглашения
@@ -267,6 +295,23 @@ $(document).ready(function () {
             inviteForm.modal('hide');
         });
     });
+
+    // TODO если появится функционал по выкидыванию пользователей из комнаты создателем комнаты, то заменить кнопку на "Исключить пользователей"
+    // покинуть комнату
+    $('#leaveRoom', roomsList.view.controls).on("click", function () {
+        var roomName = roomsList.currentRoom.roomName;
+        if (confirm("Вы действительно хотите покинуть комнату " + roomName + "?")) {
+            // запрос на выход из комнаты
+            socket.emit("leaveRoom", roomName, function(err) {
+                if (err) return console.error(err);
+                // если успех - удалить комнату из списка и все сообщения из комнаты
+                roomsList.removeRoom(roomName);
+                switchRoom("all");
+            });
+        }
+    });
+
+
 
 
     /**

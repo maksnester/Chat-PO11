@@ -168,11 +168,16 @@ socket
             membersList.update(usersInRoom);
         }
     })
-    .on('invited', function(room) {
+    .on('invited', function (room) {
         // вызывается, когда пользователя кто-то пригласил в комнату room
         // комнату добавляем в список, а в чатик пишем сообщение от сервера
         roomsList.add(room._id, room.roomName);
-        printMessage("SERVER", "<i>Вы были приглашены в комнату </i><b>" + room.roomName + "</b>");
+        printServerMessage("<i>Вы были приглашены в комнату </i><b>" + room.roomName + "</b>");
+    })
+    .on('userLeave', function (username, roomId) {
+        if (roomId === roomsList.currentRoom._id) {
+            printServerMessage("<i>Пользователь <b>" + username + "</b> покинул комнату. </i>");
+        }
     })
     .on('disconnect', function () {
         printStatus("соединение потеряно");
@@ -262,6 +267,10 @@ function printStatus(status) {
     if (autoscroll) {
         messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
     }
+}
+
+function printServerMessage(message) {
+    messageContainer.addText("<p><b>SERVER: </b>" + message + "</p>");
 }
 
 /**
