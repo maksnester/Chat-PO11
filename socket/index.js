@@ -9,6 +9,7 @@ var User = require('models/user').User;
 var Room = require('models/room').Room;
 var Archive = require('models/archive').Archive;
 var express = require('express');
+var sanitizer = require('sanitizer');
 
 function loadSession(sid, callback) {
 
@@ -211,6 +212,7 @@ module.exports = function (server) {
         });
 
         socket.on('message', function (text, callback) {
+            text = sanitizer.escape(text);
             // сохраняем в историю сообщений
             Archive.addMessage(socket.room, username, text);
 

@@ -117,7 +117,7 @@ $(document).ready(function() {
      * @param str может быть строкой, содержащей html (как правило, является таковой)
      */
     messageContainer.addText = function (str) {
-        messageContainer.append(getSafeString(str));
+        messageContainer.append(str);
         if (autoscroll) {
             messageContainer[0].scrollTop = messageContainer[0].scrollHeight;
         }
@@ -198,8 +198,7 @@ function sendMessage() {
     var text = input.val();
     if (!text || !text.trim()) return;
     socket.emit('message', text, function () {
-        printMessage("Я", wrapWithClass(text, "mymsg"));
-        receivedMessages.addMessage(roomsList.currentRoom._id, {username: "Я", message: text});
+        messageContainer.addText("<p><b>Я</b>: " + wrapWithClass(getSafeString(text), "mymsg") + "</p>");
     });
 
     input.val('');
@@ -215,7 +214,7 @@ function sendMessage() {
 function printMessage(username, message) {
     // регулярка убирает переносы строк (если их больше 2х подряд, заменяются на 2 переноса)
     // и так как переносы строк приходят в формате "\n", то они меняются на тег "br"
-    var text = '<p>' + '<b>' + username + '</b>: ' + message + '</p>';
+    var text = '<p>' + '<b>' + username + '</b>: ' + getSafeString(message) + '</p>';
     messageContainer.addText(text);
 }
 
@@ -250,7 +249,12 @@ function printMessages(messages) {
  * @returns {string|string}
  */
 function getSafeString(str) {
-    return str.replace(/\n{3,}/g, '\n\n').replace(/\n/g, '<br>').trim() || "";
+    return str.replace(/\n{3,}/g, '\n\n')
+            .replace(/\n/g, '<br>')
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .trim() || "";
+
 }
 
 function printStatus(status) {

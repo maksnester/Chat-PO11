@@ -14,7 +14,9 @@ exports.post = function(req, res, next) {
   var username = req.body.username;
   var password = req.body.password;
 
-  if (!username || !password || forbiddenLogins.indexOf(username.toLowerCase()) > -1) {
+  if (!username || !password ||
+      forbiddenLogins.indexOf(username.toLowerCase()) > -1 || username !== username.replace(/\W/g, "")
+  ) {
     return next(new HttpError(403, "Некорректные данные логина или пароля."));
   } else if (username.length > 32) {
     return next(new HttpError(403, "Слишком длинный логин. Максимальная длина = 32 символам."));

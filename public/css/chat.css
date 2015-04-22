@@ -102,6 +102,7 @@
 
 #messages {
     overflow-y: auto;
+    overflow-wrap: break-word;
     height: 85%;
     padding-left: 10px;
     padding-top: 6px;

@@ -28,7 +28,7 @@ exports.getUserRooms = function(req, res, next) {
 
 exports.newRoom = function(req, res, next) {
   var newRoomName = req.body.roomName;
-  if (!newRoomName || newRoomName.length > 32) {
+  if (!newRoomName || newRoomName.length > 32 || newRoomName !== newRoomName.replace(/\W/g, "")) {
     return next(new HttpError(400, "Невозможно создать комнату с таким именем."));
   }
 
