@@ -15,7 +15,7 @@ exports.post = function(req, res, next) {
   var password = req.body.password;
 
   if (!username || !password ||
-      forbiddenLogins.indexOf(username.toLowerCase()) > -1 || username !== username.replace(/[^a-zA-Z\d\s]/g, '')
+      forbiddenLogins.indexOf(username.toLowerCase()) > -1 || username !== username.replace(/[^a-zA-ZА-Яа-я\d\s]/g, '')
   ) {
     return next(new HttpError(403, "Некорректные данные логина или пароля."));
   } else if (username.length > 32) {
