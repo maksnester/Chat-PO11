@@ -203,7 +203,9 @@ function sendMessage() {
     var text = input.val();
     if (!text || !text.trim()) return;
     socket.emit('message', text, function () {
-        messageContainer.addText("<p><b>Я</b>: " + wrapWithClass(getSafeString(text), "mymsg") + "</p>");
+        var safeString = getSafeString(text);
+        messageContainer.addText("<p><b>Я</b>: " + wrapWithClass(safeString, "mymsg") + "</p>");
+        receivedMessages.addMessage(roomsList.currentRoom._id, {username: "Я", message: safeString});
     });
 
     input.val('');
