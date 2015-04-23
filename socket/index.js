@@ -163,12 +163,15 @@ module.exports = function (server) {
         });
 
         //при подключении join во все комнаты, что есть у пользователя в списке
+        //тут же посылаем во все комнаты, где есть этот юзер, что он пришёл
         User.getUserRooms(username, function(err, rooms) {
             if (err) return console.warn("Ошибка при получении комнат пользователя %s", username);
 
             rooms.forEach(function(room) {
                socket.join(room._id);
             });
+
+            socket.broadcast.emit('join', username, rooms);
         });
 
 
@@ -195,13 +198,8 @@ module.exports = function (server) {
                     //разделяем список на online и offline пользователей
                     var membersList = splitUsersOnlineAndOffline(usersInRoom, connectedUsers);
                     socket.emit('updateMembersList', membersList);
-                    User.getUserRooms(username, callback);
-                },
-                function (roomList, callback) {
-                    //TODO здесь ошибка. Не нужно делать join при смене комнаты. Иначе при каждой смене в чате будет
-                    // спам вида "user вошёл в чат" для всех, кто видит этого юзера в своей комнате
-                    socket.broadcast.emit('join', username, roomList);
                     callback(null);
+
                 }
             ], function (err) {
                 if (err) {
