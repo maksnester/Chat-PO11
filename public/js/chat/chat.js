@@ -257,9 +257,9 @@ function printMessages(messages) {
  */
 function getSafeString(str) {
     return str.replace(/\n{3,}/g, '\n\n')
-            .replace(/\n/g, '<br>')
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
+            .replace(/\n/g, '<br>')
             .trim() || "";
 
 }
