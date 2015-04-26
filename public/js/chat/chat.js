@@ -148,7 +148,9 @@ socket
         }
     })
     .on('join', function (username, roomList) {
-        if (roomsList.isCurrentRoomInList(roomList)) {
+        // TODO тут костыль. Если пользователь новый у него нет комнат и roomList пустой.
+        if (roomsList.isCurrentRoomInList(roomList) || !roomList.length) {
+
             setUserStatusOnline(username, true);
         }
     })
