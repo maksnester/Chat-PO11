@@ -1,5 +1,6 @@
 var checkAuth = require('middleware/checkAuth');
 var chat = require('./chat');
+var upload = require('./upload');
 
 module.exports = function(app) {
 
@@ -19,4 +20,6 @@ module.exports = function(app) {
 
   app.get('/account', checkAuth, require('./account').get);
 
+  app.get('/upload/:userId/:file', checkAuth, upload.get);
+  app.post('/upload', checkAuth, upload.post);
 };

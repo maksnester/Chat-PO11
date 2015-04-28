@@ -148,8 +148,11 @@ socket
         }
     })
     .on('join', function (username, roomList) {
-        // TODO тут костыль. Если пользователь новый у него нет комнат и roomList пустой.
-        if (roomsList.isCurrentRoomInList(roomList) || !roomList.length) {
+        if (!roomList.length) {
+            // Если пользователь новый у него нет комнат и roomList пустой.
+            roomList = ['all'];
+        }
+        if (roomsList.isCurrentRoomInList(roomList)) {
 
             setUserStatusOnline(username, true);
         }

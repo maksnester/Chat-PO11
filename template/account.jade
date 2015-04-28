@@ -13,7 +13,7 @@ block content
     .col-xs-12
         .tab-container(role="tabpanel")
             ul#myTab.nav.nav-tabs(role="tablist")
-                li.active(role="presentation")
+                li(role="presentation")
                     a#settings-tab(href="#settings" role="tab" data-toggle="tab" aria-controls="home" aria-expanded="false")
                         span.glyphicon.glyphicon-cog(style="top: 2px")
                         | &nbsp;Настройки
@@ -21,14 +21,14 @@ block content
                     a#profile-tab(href="#profile" role="tab" data-toggle="tab" aria-controls="profile" aria-expanded="true")
                         span.glyphicon.glyphicon-user
                         | &nbsp;Профиль
-                li(role="presentation")
+                li.active(role="presentation")
                     a#storage-tab(href="#storage" role="tab" data-toggle="tab" aria-controls="profile" aria-expanded="true")
                         span.glyphicon.glyphicon-cloud(style="top: 3px")
                         | &nbsp;Информация о хранилище файлов
 
             #myTabContent.tab-content
 
-                #settings.tab-pane.fade.active.in(role="tabpanel" aria-labelledby="settings-tab")
+                #settings.tab-pane.fade(role="tabpanel" aria-labelledby="settings-tab")
                     form.basic-form
                         input#login.form-control(name="login" type="text" placeholder="Логин в чате" required)
                         input#password.form-control(name="password" type="password" placeholder="Новый пароль")
@@ -54,14 +54,14 @@ block content
                             label.control-label(for="#about") Обо мне
                             textarea#about.form-control(name="about" placeholder="Расскажите что-нибудь о себе...")
                         button.btn.btn-sm.btn-primary.btn-save(type="submit") Сохранить
-                #storage.tab-pane.fade(role="tabpanel" aria-labelledby="storage-tab")
+                #storage.tab-pane.fade.active.in(role="tabpanel" aria-labelledby="storage-tab")
                     .progress
                         .progress-bar(role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;")
                             |60%
                     #storageSize Занято 6Мб из 10Мб
 
                     #storageList
-                        form.basic-form
+                        form.basic-form(enctype="multipart/form-data" action='/upload', method='post')
                             .form-group
                                 input#file(name="file" type="file")
                                 button.btn.btn-sm.btn-primary.btn-save(type="submit") Сохранить файл

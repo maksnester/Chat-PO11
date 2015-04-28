@@ -1,6 +1,10 @@
 'use strict';
 $(document).ready(function(){
-    $('form').on("submit", function() {
+    $('form', '#settings').on("submit", function() {
+        alert("not implemented yet");
+        return false;
+    });
+    $('form', '#profile').on("submit", function() {
         alert("not implemented yet");
         return false;
     });

@@ -1,5 +1,6 @@
 var express = require('express');
 var http = require('http');
+var fs = require('fs');
 var path = require('path');
 var config = require('config');
 var log = require('lib/log')(module);
@@ -23,7 +24,13 @@ if (app.get('env') == 'development') {
     app.use(express.logger('default'));
 }
 
-app.use(express.bodyParser());
+app.use(express.bodyParser(
+        {
+            keepExtensions: true,
+            uploadDir: './public/uploads/'
+        }
+    )
+);
 
 app.use(express.cookieParser());
 
