@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-exports.post = function (req, res, next) {
+exports.newFile = function (req, res, next) {
     var userId = req.session.user;
     var file = req.files.file;
     if (file) {
@@ -53,7 +53,9 @@ exports.getUserFiles = function (req, res, next) {
         if (stats && stats.isDirectory()) {
             fs.readdir(path, function(err, files) {
                 if (err) return next(err);
-                if (!files) return res.send([]);
+                if (!files || !files.length) return res.send([]);
+
+
 
                 var listOfFiles = {}; // {filename: filePath}
                 files.forEach(function(file) {
@@ -65,5 +67,18 @@ exports.getUserFiles = function (req, res, next) {
         } else {
             res.send([]);
         }
+    });
+};
+
+exports.deleteFile = function (req, res, next) {
+    var filename = req.params.file;
+    if (filename.indexOf('../') > -1) {
+        console.warn("WARNING!!! Предпринята попытка удалить файл, имя которого содержит относительный путь!");
+        return res.status(400).end();
+    }
+
+    fs.unlink('public/uploads/' + req.session.user + '/' + filename, function (err) {
+        if (err) return next(err);
+        res.status(200).end();
     });
 };

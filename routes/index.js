@@ -23,5 +23,6 @@ module.exports = function(app) {
   //TODO быстрое решение для файлов - запихать в public и обрабатывать через express.static. Есть над чем подумать.
   //app.get('/upload/:userId/:file', checkAuth, upload.get);
   app.get('/uploads', checkAuth, upload.getUserFiles);
-  app.post('/upload', checkAuth, upload.post);
+  app.post('/upload', checkAuth, upload.newFile);
+  app.delete('/uploads/:file', checkAuth, upload.deleteFile);
 };

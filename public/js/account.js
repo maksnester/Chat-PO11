@@ -9,19 +9,42 @@ $(document).ready(function () {
         return false;
     });
 
-    $('button.close').on("click", function (event) {
-        console.log(event);
-        alert("Delete files not implemented")
+    var filesContainer = $('ul', '#storageList');
+
+    // кнопка удаления файла
+    $('ul').on("click", function (event) {
+        if (event.target.parentNode.tagName === "BUTTON") {
+            var li = event.target.parentNode.parentNode;
+            var filename = li.textContent || li.innerText;
+            filename = filename.slice(0, filename.length - 1); // отрезать крестик. Он тоже попадает в textContent
+            $.ajax({
+                url: 'http://' + window.location.host + '/uploads/' + filename,
+                method: 'delete',
+                success: function () {
+                    console.info('Файл успешно %o успешно удалён', filename);
+                },
+                error: function (err) {
+                    console.error('При удалении файла %o произошла ошибка: %o', filename, err);
+                }
+            });
+
+            $(li).fadeOut(500, function() {
+                $(this).remove();
+                if (!filesContainer.children().length) {
+                    filesContainer.html('У вас пока нет файлов.');
+                }
+            });
+        }
     });
 
-    var filesContainer = $('ul', '#storageList');
+
     var closeButton = '<button class="close" type="button"><span aria-hidden="true">×</span></button>';
-    getFiles(function(err, files) {
+    getFiles(function (err, files) {
         if (err) {
-            filesContainer.html('<li class="error">' + err.message + '</li>');
+            filesContainer.html('При получении данных произошла ошибка: ' + err.message);
         }
         if (!files || !files.length) {
-            filesContainer.html('<li class="error">Пока что у вас нет файлов</li>');
+            filesContainer.html('У вас пока нет файлов.');
         } else {
             var htmlCode = "";
             var fileLink;
