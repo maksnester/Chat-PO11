@@ -20,6 +20,8 @@ module.exports = function(app) {
 
   app.get('/account', checkAuth, require('./account').get);
 
-  app.get('/upload/:userId/:file', checkAuth, upload.get);
+  //TODO быстрое решение для файлов - запихать в public и обрабатывать через express.static. Есть над чем подумать.
+  //app.get('/upload/:userId/:file', checkAuth, upload.get);
+  app.get('/uploads', checkAuth, upload.getUserFiles);
   app.post('/upload', checkAuth, upload.post);
 };

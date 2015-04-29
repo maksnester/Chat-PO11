@@ -2,7 +2,6 @@ var fs = require('fs');
 
 exports.post = function (req, res, next) {
     var userId = req.session.user;
-    console.warn(req.files);
     var file = req.files.file;
     if (file) {
         var tmp_path = file.path;
@@ -23,13 +22,14 @@ exports.post = function (req, res, next) {
 
         fs.rename(tmp_path, target_path, function(err) {
             if (err) {
-                throw err;
+                return next(err);
             }
             fs.unlink(tmp_path, function() {
                 if (err) {
-                    throw err;
+                    return next(err);
                 }
-                res.send('File uploaded to: ' + target_path + ' - ' + file.size + ' bytes');
+                console.info('File uploaded to: ' + target_path + ' - ' + file.size + ' bytes');
+                res.redirect('/account');
             });
         });
     }
@@ -39,6 +39,31 @@ exports.post = function (req, res, next) {
     }
 };
 
-exports.get = function (req, res, next) {
-    console.error("WHY GET!!!!!????");
+/**
+ * Отправляет в ответ на этот запрос JSON со списком файлов пользователя.
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.getUserFiles = function (req, res, next) {
+    var userId = req.session.user;
+    var path = 'public/uploads/' + userId + '/';
+    var fileLink = path.replace('public/', '');
+    fs.stat(path, function(err, stats) {
+        if (stats && stats.isDirectory()) {
+            fs.readdir(path, function(err, files) {
+                if (err) return next(err);
+                if (!files) return res.send([]);
+
+                var listOfFiles = {}; // {filename: filePath}
+                files.forEach(function(file) {
+                    listOfFiles[file] = fileLink + file; // ссылка на файл
+                });
+
+                res.send([listOfFiles]);
+            });
+        } else {
+            res.send([]);
+        }
+    });
 };
