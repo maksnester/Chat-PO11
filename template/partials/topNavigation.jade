@@ -10,13 +10,13 @@
          ul.nav.navbar-nav
             li
                a(href='/') Главная
+            li
+               a(href='' data-toggle="modal" data-target="#feedbackModal") Обратная связь
             if user
                li
                   a(href='/chat') Чат
                li
                   a(href='/account') Аккаунт
-               li
-                  a(href='/feedback') Обратная связь
          ul.nav.navbar-nav.navbar-right
             li
                if user
@@ -24,3 +24,18 @@
                else
                   a(href="/login") Войти
 
+#feedbackModal.modal.fade(tabindex="-1" role="dialog" aria-labelleby="feedbackModalLabel")
+   .modal-dialog
+      .modal-content
+         .modal-header
+            button.close(type="button" data-dismiss="modal" aria-label="Close") &times;
+            h4#feedbackModalLabel.modal-title Напишите нам
+         .modal-body
+            p По всем вопросам связанным с технической стороной сайта (предложения, баги) вы можете
+               |открыть новый запрос в нашем&nbsp;
+               a(href="https://github.com/Alendorff/Chat-PO11/issues") репозитории на GitHub.
+            p Для того чтобы пожаловаться на других пользователей чата за оскорбительное поведение или просто связаться с модераторами
+               |вы можете написать на указанный email:
+               a(href="mailto:moderator@chatpo11.com") moderator@chatpo11.com
+         .modal-footer
+            button.btn.btn-success(type="button" data-dismiss="modal") Я всё понял

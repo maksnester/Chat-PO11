@@ -60,6 +60,6 @@ li > button.close {
     clear: right;
 }
 
-.close {
+li > .close {
     float: none;
 }
