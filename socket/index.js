@@ -27,7 +27,7 @@ function loadSession(sid, callback) {
 
 function loadUser(session, callback) {
 
-    if (!session.user) {
+    if (!session || !session.user) {
         console.log("Session %s is anonymous", session.id);
         return callback(null, null);
     }
@@ -47,7 +47,8 @@ function loadUser(session, callback) {
  * Подготавливает объект с online и offline пользователями.
  *
  * @param usersInRoom список пользователей, которых проверяем
- * @param connectedUsers это объект, у которого ключи - имена пользователей. Пользователь online, если он в этом объекте.
+ * @param connectedUsers это объект, у которого ключи - имена пользователей. Пользователь online, если он в этом
+ *     объекте.
  * @returns {Object} вида {onlineUsers: [...], offlineUsers: [...]}
  */
 function splitUsersOnlineAndOffline(usersInRoom, connectedUsers) {
@@ -164,14 +165,19 @@ module.exports = function (server) {
 
         //при подключении join во все комнаты, что есть у пользователя в списке
         //тут же посылаем во все комнаты, где есть этот юзер, что он пришёл
-        User.getUserRooms(username, function(err, rooms) {
+        User.getUserRooms(username, function (err, rooms) {
             if (err) return console.warn("Ошибка при получении комнат пользователя %s", username);
-
-            rooms.forEach(function(room) {
-               socket.join(room._id);
-            });
-
-            socket.broadcast.emit('join', username, rooms);
+            if (!rooms || !rooms.length) {
+                Room.getDefaultRoomId(function (err, roomId) {
+                    socket.join(roomId);
+                    socket.broadcast.emit('join', username, [{_id: roomId}]);
+                });
+            } else {
+                rooms.forEach(function (room) {
+                    socket.join(room._id);
+                });
+                socket.broadcast.emit('join', username, rooms);
+            }
         });
 
 
@@ -179,13 +185,17 @@ module.exports = function (server) {
             console.log("Вызван switchRoom для пользователя %s", username);
             var _roomId;
             async.waterfall([
-                function (callback) {
-                    if (roomName === "all") User.checkUserDefaultRoom(username, callback);
-                    else callback(null);
-                },
+                //function (callback) {
+                //    if (roomName === "all") User.checkUserDefaultRoom(username, callback);
+                //    else callback(null);
+                //},
                 function (callback) {
                     //roomName - это пользовательское название комнаты. Получим из него _id комнаты
-                    User.getRoomByNameInUser(roomName, username, callback);
+                    if (roomName === "all") {
+                        Room.getDefaultRoomId(callback);
+                    } else {
+                        User.getRoomByNameInUser(roomName, username, callback);
+                    }
                 },
                 function (roomId, callback) {
                     _roomId = roomId;
@@ -272,8 +282,8 @@ module.exports = function (server) {
             });
         });
 
-        socket.on('leaveRoom', function(roomName, callback) {
-            User.leaveRoom(roomName, username, function(err, room) {
+        socket.on('leaveRoom', function (roomName, callback) {
+            User.leaveRoom(roomName, username, function (err, room) {
                 if (err) {
                     console.error(err);
                     return callback(err);
@@ -297,6 +307,8 @@ module.exports = function (server) {
                 socket.broadcast.emit('leave', username, roomList);
             });
         });
+
+        socket.emit('my login', username);
     });
 
     return io;

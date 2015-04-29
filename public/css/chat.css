@@ -230,3 +230,15 @@
     table-layout: fixed;
     word-wrap: break-word;
 }
+
+#historyModal table tr > th:first-child {
+    width: 100px;
+}
+
+#login {
+    margin-left: 63px;
+    float: left;
+    margin-top: 3px;
+    font-size: 1.2em;
+    color: rgb(236, 237, 237);
+}
