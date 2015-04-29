@@ -28,7 +28,7 @@ function loadSession(sid, callback) {
 function loadUser(session, callback) {
 
     if (!session || !session.user) {
-        console.log("Session %s is anonymous", session.id);
+        console.log("Session is anonymous");
         return callback(null, null);
     }
 
