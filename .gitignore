@@ -4,3 +4,4 @@ public/vendor/bower_components
 mongod-run.bat
 template/*.html
 template/*/*.html
+npm-debug.log

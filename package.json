@@ -18,5 +18,8 @@
     "sanitizer": "^0.1.2",
     "socket.io": "^0.9.17",
     "winston": "^0.9.0"
+  },
+  "scripts": {
+    "start": "set NODE_PATH=.; && node app.js --harmony"
   }
 }
